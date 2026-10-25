@@ -4116,8 +4116,8 @@ function normalizeDeviceType(value) {
 __name(normalizeDeviceType, "normalizeDeviceType");
 
 // _utils/build-meta.js
-var BUILD_LABEL = "1.33.0 (12aec4a)";
-var COMPONENT_VERSIONS = { panel: "1.33.0", logger: "1.33.0", sgmodule: "1.33.0" };
+var BUILD_LABEL = "1.34.0 (f98dbc3)";
+var COMPONENT_VERSIONS = { panel: "1.34.0", logger: "1.34.0", sgmodule: "1.34.0" };
 var PANEL_ORIGIN = "https://final-axx.pages.dev";
 
 // _utils/devices/version.js
@@ -16752,7 +16752,7 @@ async function onRequest20(context2) {
 }
 __name(onRequest20, "onRequest");
 
-// ../.wrangler/tmp/pages-kySL7J/functionsRoutes-0.13266090994786295.mjs
+// ../.wrangler/tmp/pages-oEel8i/functionsRoutes-0.6620713232279972.mjs
 var routes = [
   {
     routePath: "/api/_health/run",
