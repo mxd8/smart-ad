@@ -1044,236 +1044,6 @@ function warningHeadersIfOpen(env2) {
 }
 __name(warningHeadersIfOpen, "warningHeadersIfOpen");
 
-// _utils/auth/policy.js
-var NO_STORE = { "Cache-Control": "no-store" };
-var FEATURES = {
-  "logs.write": "\u89C4\u5219\u5199\u64CD\u4F5C\uFF08\u66F4\u65B0 / \u5220\u9664 / \u6279\u91CF / \u6E05\u7A7A\uFF09",
-  "logs.view": "\u62A5\u9519\u4E0E\u65E5\u5FD7\u67E5\u770B\uFF08\u9519\u8BEF\u8BE6\u60C5\u4E0E\u9519\u8BEF\u65E5\u5FD7\u5F39\u7A97\uFF09",
-  "logs.clean": "\u6E05\u7406\u5DE5\u5177\uFF08\u5220\u9664\u8BB0\u5F55 / \u6279\u91CF\u6E05\u9664\u6CE8\u91CA\uFF09",
-  "danger.zone": "\u9AD8\u5371\u64CD\u4F5C\uFF08\u4E00\u952E\u6E05\u7A7A\u6570\u636E\u5E93\uFF09",
-  "rules.batch": "\u6279\u91CF\u6DFB\u52A0\u89C4\u5219",
-  "rules.quickedit": "\u5FEB\u901F\u7F16\u8F91\u89C4\u5219\uFF08\u66F4\u65B0 / \u5220\u9664 / \u6392\u9664\uFF09",
-  "export.filter": "\u7B56\u7565\u7EC4\uFF08\u8BA2\u9605\u5730\u5740 / \u7B56\u7565\u6E05\u5355\u4E0E\u8FC7\u6EE4\u8BBE\u7F6E\uFF09",
-  "subscribe.manage": "\u8BA2\u9605\u89E3\u6790\u4E0E\u7BA1\u7406",
-  "duty.view": "\u7528\u6237\u503C\u73ED\u770B\u677F",
-  "usage.cloudflare": "Cloudflare \u7528\u91CF",
-  "devices.view": "\u7528\u6237\u4E0E\u8BBE\u5907\u8BE6\u60C5\uFF08\u8BBE\u5907\u660E\u7EC6 / \u8D26\u53F7\u4FE1\u606F / \u79BB\u7EBF\u6B8B\u7559\u6E05\u7406\uFF09",
-  "health.check": "\u914D\u7F6E\u68C0\u6D4B\uFF08\u57FA\u7840 / \u6DF1\u5EA6\u68C0\u6D4B\u4E0E\u8BCA\u65AD\u62A5\u544A\uFF09",
-  "sync.gist": "\u4E91\u540C\u6B65\u4E0E Gist \u5907\u4EFD\uFF08\u914D\u7F6E / \u4E0A\u4F20 / \u8FD8\u539F\uFF09",
-  "ai.status": "AI \u961F\u5217\u4E0E\u8FD0\u884C\u72B6\u6001\uFF08\u542B\u5237\u65B0 / \u91CD\u7F6E\u5224\u5B9A\u6C47\u603B\uFF09",
-  "ai.prompt": "AI \u5206\u6D41\u63D0\u793A\u8BCD",
-  "ai.config": "AI \u8D26\u53F7\u4E0E\u6A21\u578B\uFF08\u8FDE\u63A5 / \u4E2D\u8F6C\u7AD9 / \u6A21\u578B\u6C60\uFF09",
-  "ai.schedule": "\u81EA\u52A8\u5316\u8C03\u5EA6",
-  "ai.runtime": "AI \u8FD0\u884C\u72B6\u6001\uFF08\u8D26\u53F7\u4E0E\u6A21\u578B\u5C42\u7EA7\u6811\uFF09",
-  "ai.page.judge": "\u6574\u9875 AI \u5224\u5B9A",
-  "ai.page.history": "\u5237\u65B0\u6574\u9875\u5386\u53F2",
-  "ai.run": "AI \u81EA\u52A8\u5206\u6D41\u6267\u884C",
-  "turso.manage": "Turso \u6570\u636E\u5E93\u7BA1\u7406\uFF08\u4EC5\u7BA1\u7406\u5458\u6709\u6548\uFF09",
-  "setup.wizard": "\u5B89\u88C5 / \u8BBE\u7F6E\u5411\u5BFC",
-  "users.manage": "\u7528\u6237\u4E0E\u6743\u9650\u7BA1\u7406\uFF08\u4EC5\u7BA1\u7406\u5458\u6709\u6548\uFF09"
-};
-var FEATURE_DEFAULTS = Object.freeze({
-  "logs.view": "deny",
-  "logs.clean": "deny",
-  "danger.zone": "deny",
-  "rules.batch": "deny",
-  "rules.quickedit": "deny",
-  "export.filter": "deny",
-  "subscribe.manage": "deny",
-  "duty.view": "deny",
-  "usage.cloudflare": "deny",
-  "devices.view": "deny",
-  "health.check": "deny",
-  "sync.gist": "deny",
-  "ai.status": "deny",
-  "ai.prompt": "deny",
-  "ai.config": "deny",
-  "ai.schedule": "deny",
-  "ai.runtime": "deny",
-  "turso.manage": "deny",
-  "setup.wizard": "deny"
-});
-var featurePolicies = /* @__PURE__ */ new Map();
-function mergedFeatures(principal) {
-  return {
-    ...principal?.group?.permissions?.features ?? {},
-    ...principal?.user?.rolePermissions?.features ?? {},
-    ...principal?.user?.permissions?.features ?? {}
-  };
-}
-__name(mergedFeatures, "mergedFeatures");
-function featureDefault(feature) {
-  return FEATURE_DEFAULTS[feature] === "deny" ? "deny" : "allow";
-}
-__name(featureDefault, "featureDefault");
-async function evaluateFeature(principal, feature, context2 = {}) {
-  if (!principal) return { allowed: false, reason: "anonymous" };
-  if (principal.type === "token") return { allowed: true, reason: "legacy-token" };
-  if (principal.type === "anonymous-legacy") return { allowed: true, reason: "legacy-anonymous" };
-  if (principal.user?.role === "admin") return { allowed: true, reason: "admin" };
-  const dynamic = featurePolicies.get(feature);
-  if (dynamic) {
-    const verdict = await dynamic(principal, feature, context2);
-    if (verdict && typeof verdict === "object" && typeof verdict.allowed === "boolean") {
-      return verdict;
-    }
-  }
-  const rule = mergedFeatures(principal)[feature];
-  if (rule === "deny") return { allowed: false, reason: "permission-deny" };
-  if (rule === "allow") return { allowed: true, reason: "permission-allow" };
-  if (featureDefault(feature) === "deny") return { allowed: false, reason: "default-deny" };
-  return { allowed: true, reason: "default" };
-}
-__name(evaluateFeature, "evaluateFeature");
-async function evaluateAllFeatures(principal) {
-  const access = {};
-  for (const feature of Object.keys(FEATURES)) {
-    access[feature] = (await evaluateFeature(principal, feature)).allowed;
-  }
-  return access;
-}
-__name(evaluateAllFeatures, "evaluateAllFeatures");
-async function requireFeature(principal, feature, context2 = {}) {
-  const verdict = await evaluateFeature(principal, feature, context2);
-  if (verdict.allowed) return null;
-  return jsonResponse(
-    {
-      success: false,
-      error: `\u529F\u80FD\u5DF2\u88AB\u9650\u5236\uFF1A${FEATURES[feature] ?? feature}\uFF08${verdict.reason}\uFF09\u3002\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458\u8C03\u6574\u7528\u6237\u6216\u7528\u6237\u7EC4\u7684\u529F\u80FD\u6743\u9650\u3002`
-    },
-    { status: 403, headers: NO_STORE }
-  );
-}
-__name(requireFeature, "requireFeature");
-
-// _utils/users/core.js
-var USER_STATUSES = ["active", "disabled"];
-var BUILTIN_ROLES = [
-  {
-    name: "admin",
-    builtin: true,
-    permissions: {},
-    description: "\u8D85\u7EA7\u7BA1\u7406\u5458\uFF1A\u6743\u9650\u81EA\u9002\u5E94\u5168\u5F00\uFF08\u542B\u672A\u6765\u65B0\u589E\u529F\u80FD\uFF09\uFF0C\u65E0\u9700\u914D\u7F6E"
-  },
-  {
-    name: "user",
-    builtin: true,
-    permissions: {},
-    description: "\u666E\u901A\u7528\u6237\uFF1A\u9ED8\u8BA4\u53D7\u9650\uFF0C\u6309\u7EC4 / \u89D2\u8272 / \u7528\u6237\u914D\u7F6E\u653E\u884C"
-  },
-  {
-    name: "test",
-    builtin: true,
-    permissions: {},
-    description: "\u6D4B\u8BD5\u89D2\u8272\uFF08\u5185\u7F6E\uFF09\uFF1A\u968F\u5185\u7F6E\u6D4B\u8BD5\u8D26\u53F7\u7528\u4E8E\u6743\u9650\u8C03\u8BD5\uFF0C\u9ED8\u8BA4\u53D7\u9650\u53EF\u6309\u9700\u6388\u6743"
-  }
-];
-var USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,32}$/;
-var ACCOUNT_PATTERN = /^[\u4e00-\u9fa5A-Za-z0-9_-]{2,32}$/;
-var MAX_DISPLAY_NAME = 32;
-var DEFAULT_KEY_QUOTA = 0;
-var MAX_KEY_QUOTA = 1e6;
-var USER_LIST_COLUMNS = `id, username, uid, display_name, role, group_id, status, permissions, created_at, updated_at, last_login_at, user_key_preview, user_key_created_at, user_key_last_used_at, key_quota_total, key_quota_used, key_issued_at, key_issue_secret, is_builtin`;
-function validateRoleName(name) {
-  const value = String(name ?? "").trim();
-  if (!ACCOUNT_PATTERN.test(value)) return "\u89D2\u8272\u540D\u9700 2-32 \u4F4D\u4E2D\u6587\u3001\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26";
-  if (BUILTIN_ROLES.some((role) => role.name === value))
-    return `\u300C${value}\u300D\u662F\u5185\u7F6E\u89D2\u8272\uFF0C\u4E0D\u53EF\u5360\u7528`;
-  return "";
-}
-__name(validateRoleName, "validateRoleName");
-function keyQuotaView(total, used) {
-  const safeTotal = Number.isFinite(Number(total)) && Number(total) >= 0 ? Math.floor(Number(total)) : DEFAULT_KEY_QUOTA;
-  const safeUsed = Number.isFinite(Number(used)) && Number(used) >= 0 ? Math.floor(Number(used)) : 0;
-  if (safeTotal <= 0) return { total: 0, used: safeUsed, remaining: -1 };
-  return { total: safeTotal, used: safeUsed, remaining: Math.max(0, safeTotal - safeUsed) };
-}
-__name(keyQuotaView, "keyQuotaView");
-function validateUsername(username) {
-  const value = String(username ?? "").trim();
-  if (!ACCOUNT_PATTERN.test(value)) return "\u8D26\u53F7\u9700 2-32 \u4F4D\u4E2D\u6587\u3001\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26";
-  return "";
-}
-__name(validateUsername, "validateUsername");
-function validateUid(uid) {
-  const value = String(uid ?? "").trim();
-  if (!USERNAME_PATTERN.test(value)) return "UID \u9700 2-32 \u4F4D\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26";
-  return "";
-}
-__name(validateUid, "validateUid");
-function cleanDisplayName(value) {
-  return String(value ?? "").trim().slice(0, MAX_DISPLAY_NAME);
-}
-__name(cleanDisplayName, "cleanDisplayName");
-function parsePermissions(raw) {
-  try {
-    const parsed = JSON.parse(String(raw ?? "{}"));
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-__name(parsePermissions, "parsePermissions");
-function normalizeFeatures(value) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  const features2 = {};
-  for (const [key, rule] of Object.entries(source)) {
-    if (typeof key === "string" && key.length > 0 && key.length <= 64 && (rule === "allow" || rule === "deny")) {
-      features2[key] = rule;
-    }
-  }
-  return features2;
-}
-__name(normalizeFeatures, "normalizeFeatures");
-function sanitizeUserRow(row) {
-  return {
-    id: Number(row.id),
-    username: String(row.username ?? ""),
-    uid: String(row.uid ?? ""),
-    displayName: String(row.display_name ?? ""),
-    role: String(row.role ?? "user"),
-    groupId: row.group_id == null ? null : Number(row.group_id),
-    status: String(row.status ?? "active"),
-    permissions: parsePermissions(row.permissions),
-    createdAt: String(row.created_at ?? ""),
-    updatedAt: String(row.updated_at ?? ""),
-    lastLoginAt: String(row.last_login_at ?? ""),
-    userKeyPreview: String(row.user_key_preview ?? ""),
-    userKeyCreatedAt: String(row.user_key_created_at ?? ""),
-    userKeyLastUsedAt: String(row.user_key_last_used_at ?? ""),
-    // 调用额度（v9）：remaining = total - used（下限 0，防脏数据出负数）
-    keyQuota: keyQuotaView(row.key_quota_total, row.key_quota_used),
-    // v1.27 内置测试账号：与普通用户同权同可编辑，唯一差异是不可删除
-    isBuiltin: Boolean(Number(row.is_builtin ?? 0))
-  };
-}
-__name(sanitizeUserRow, "sanitizeUserRow");
-function sanitizeGroupRow(row) {
-  return {
-    id: Number(row.id),
-    name: String(row.name ?? ""),
-    description: String(row.description ?? ""),
-    permissions: parsePermissions(row.permissions),
-    // v12：系统默认组（超级管理员 / 普通用户 / 游客 / 禁用）不可删除
-    isSystem: Boolean(Number(row.is_system ?? 0)),
-    createdAt: String(row.created_at ?? ""),
-    updatedAt: String(row.updated_at ?? "")
-  };
-}
-__name(sanitizeGroupRow, "sanitizeGroupRow");
-function sanitizeRoleRow(row) {
-  return {
-    id: Number(row.id),
-    name: String(row.name ?? ""),
-    description: String(row.description ?? ""),
-    permissions: parsePermissions(row.permissions),
-    builtin: false,
-    createdAt: String(row.created_at ?? ""),
-    updatedAt: String(row.updated_at ?? "")
-  };
-}
-__name(sanitizeRoleRow, "sanitizeRoleRow");
-
 // _utils/fetch-retry.js
 var RETRYABLE_STATUSES = [408, 425, 429, 500, 502, 503, 504];
 function isRetryableStatus(status4) {
@@ -1508,7 +1278,7 @@ __name(constraintTargetOf, "constraintTargetOf");
 var DEFAULT_MAX_BATCH_SIZE = 250;
 
 // _utils/db/ddl.js
-var DB_SCHEMA_VERSION = 16;
+var DB_SCHEMA_VERSION = 20;
 var DB_META_TABLE = "db_meta";
 var HEALTH_PROBE_TABLE = "health_probe";
 var HEARTBEATS_TABLE = "client_heartbeats";
@@ -1565,9 +1335,28 @@ var USER_GROUPS_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${USER_GROUPS_TABLE} (
   -- v12\uFF1A1 = \u7CFB\u7EDF\u9ED8\u8BA4\u7EC4\uFF08\u8D85\u7EA7\u7BA1\u7406\u5458 / \u666E\u901A\u7528\u6237 / \u6E38\u5BA2 / \u7981\u7528\uFF09\u2014\u2014\u4E0D\u53EF\u5220\u9664\uFF0C
   --     \u540D\u5B57\u56FA\u5B9A\uFF0C\u6743\u9650\u4E0E\u666E\u901A\u7EC4\u4E00\u6837\u53EF\u914D\uFF08\u65B0\u7528\u6237\u52A0\u5165\u65F6\u7684\u9ED8\u8BA4\u529F\u80FD\u9650\u5236\uFF09
   is_system INTEGER NOT NULL DEFAULT 0,
+  -- v20\uFF1A\u7EC4\u7EE7\u627F\uFF08T33-6 #137\uFF0Cepic AC-2\uFF09\u2014\u2014\u7236\u7EC4\uFF1B\u6743\u9650\u5408\u5E76\u5E8F\u300C\u7956\u5148\u7EC4\u2190\u672C\u7EC4\u2190\u89D2\u8272\u2190\u7528\u6237\u300D\uFF0C
+  --     \u5199\u5165\u4FA7\u6821\u9A8C\u81EA\u73AF / \u73AF / \u6DF1\u5EA6\u4E0A\u9650\uFF08\u89C1 _utils/users/groups.js\uFF09
+  parent_id INTEGER REFERENCES ${USER_GROUPS_TABLE}(id),
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );`.trim();
+var USER_GROUPS_PARENT_INDEX_DDL = `CREATE INDEX IF NOT EXISTS idx_user_groups_parent ON ${USER_GROUPS_TABLE}(parent_id);`.trim();
+var FEATURE_ENTITLEMENTS_TABLE = "feature_entitlements";
+var FEATURE_ENTITLEMENTS_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${FEATURE_ENTITLEMENTS_TABLE} (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject_type TEXT NOT NULL CHECK (subject_type IN ('user','group','role')),
+  subject_id INTEGER NOT NULL,
+  feature TEXT NOT NULL,
+  quota_total INTEGER NOT NULL DEFAULT 0,
+  quota_used INTEGER NOT NULL DEFAULT 0,
+  window_key TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (subject_type, subject_id, feature, window_key)
+);`.trim();
+var FEATURE_ENTITLEMENTS_SCHEMA = FEATURE_ENTITLEMENTS_TABLE_DDL;
+var FEATURE_ENTITLEMENTS_INDEX_DDL = `CREATE INDEX IF NOT EXISTS idx_feature_entitlements_subject ON ${FEATURE_ENTITLEMENTS_TABLE}(subject_type, subject_id);`.trim();
 var USER_ROLES_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${USER_ROLES_TABLE} (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
@@ -1576,6 +1365,26 @@ var USER_ROLES_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${USER_ROLES_TABLE} (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );`.trim();
+var AUDIT_LOGS_TABLE = "audit_logs";
+var AUDIT_LOGS_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${AUDIT_LOGS_TABLE} (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  actor_id INTEGER,
+  actor_label TEXT NOT NULL DEFAULT '',
+  action TEXT NOT NULL,
+  object_type TEXT NOT NULL DEFAULT '',
+  object_id TEXT NOT NULL DEFAULT '',
+  object_label TEXT NOT NULL DEFAULT '',
+  summary TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);`.trim();
+var AUDIT_LOGS_INDEX_DDL = `CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON ${AUDIT_LOGS_TABLE}(created_at DESC);`.trim();
+var FEATURE_ROLLOUTS_TABLE = "feature_rollouts";
+var FEATURE_ROLLOUTS_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${FEATURE_ROLLOUTS_TABLE} (
+  feature TEXT PRIMARY KEY,
+  config TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);`.trim();
+var FEATURE_ROLLOUTS_SCHEMA = FEATURE_ROLLOUTS_TABLE_DDL;
 var EXPORT_POLICIES_TABLE = "export_policies";
 var EXPORT_POLICIES_TABLE_DDL = `CREATE TABLE IF NOT EXISTS ${EXPORT_POLICIES_TABLE} (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1801,7 +1610,13 @@ var BASE_DDL = [
   TURSO_DATABASES_TABLE_DDL,
   EXPORT_POLICIES_TABLE_DDL,
   EXPORT_POLICIES_INDEX_DDL,
-  USER_ROLES_TABLE_DDL
+  USER_ROLES_TABLE_DDL,
+  AUDIT_LOGS_TABLE_DDL,
+  AUDIT_LOGS_INDEX_DDL,
+  FEATURE_ROLLOUTS_TABLE_DDL,
+  USER_GROUPS_PARENT_INDEX_DDL,
+  FEATURE_ENTITLEMENTS_TABLE_DDL,
+  FEATURE_ENTITLEMENTS_INDEX_DDL
 ];
 var MIGRATION_STEPS = {
   1: [DB_META_SCHEMA, HEALTH_PROBE_SCHEMA, HEARTBEATS_TABLE_DDL, HEARTBEATS_INDEX_DDL],
@@ -1964,8 +1779,9 @@ var MIGRATION_STEPS = {
   ],
   14: [
     // v14：内置测试账号（v1.27）——users 补 is_builtin 列。首次初始化管理员后自动
-    // 种入 test / test123 调试账号（角色 test、用户组 test，均内置），与普通注册
-    // 用户同权同可编辑，唯一差异是不可删除（路由层按 is_builtin 拒绝 DELETE）。
+    // 种入内置调试账号（角色 test、用户组 test，均内置），与普通注册用户同权同可
+    // 编辑，唯一差异是不可删除（路由层按 is_builtin 拒绝 DELETE）；v1.34 起口令为
+    // 一次性随机生成（明文仅随种入当次响应发放），不再使用源码固定口令。
     // 账号本身的种子走运行时幂等补种（users.js ensureBuiltinTestUser），不进迁移。
     `ALTER TABLE ${USERS_TABLE} ADD COLUMN is_builtin INTEGER NOT NULL DEFAULT 0`
   ],
@@ -1987,6 +1803,35 @@ var MIGRATION_STEPS = {
     //               ligeicon.json 自动解析后按名挑选，回填完整 URL）。
     `ALTER TABLE ${EXPORT_POLICIES_TABLE} ADD COLUMN group_name TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE ${EXPORT_POLICIES_TABLE} ADD COLUMN icon TEXT NOT NULL DEFAULT ''`
+  ],
+  17: [
+    // v17：内置资产下线（T33 #117 第一片）——内置 test 账号与 'test' 系统组停止
+    // 种入（种入侧已移除，全新部署不再出现）后的存量处置，数据一律保留：
+    //   · role='test' 的存量账号默认禁用（status='disabled'，登录路径另有公开
+    //     口令封堵双保险；管理员可改角色后重新启用）；
+    //   · 'test' 系统组摘掉 is_system 保护，降为可删除的普通组（成员关系保留）。
+    `UPDATE ${USERS_TABLE} SET status = 'disabled' WHERE role = 'test' AND status = 'active'`,
+    `UPDATE ${USER_GROUPS_TABLE} SET is_system = 0 WHERE name = 'test' AND is_system = 1`
+  ],
+  18: [
+    // v18：权限变更审计日志（T33-2 #133，epic AC-8）——用户/角色/组的增删改与
+    // 权限变更落审计（摘要级：操作者/动作/对象/变更摘要，无明文口令与令牌）。
+    // 全新库走 BASE_DDL 不经这里。
+    AUDIT_LOGS_TABLE_DDL,
+    AUDIT_LOGS_INDEX_DDL
+  ],
+  19: [
+    // v19：特性灰度配置（T33-5 #136，epic AC-5）——三档目标（白名单/用户组/百分比）
+    // 的 feature 级放量配置，判定并入 evaluateFeature 链（显式规则之后、默认之前）。
+    FEATURE_ROLLOUTS_TABLE_DDL
+  ],
+  20: [
+    // v20：RBAC 实体扩容（T33-6 #137，epic AC-2）——组继承（parent_id + 索引，
+    // 存量组全部 NULL = 无父，数据不丢）与功能配额实体表（消费归 T33-7）。
+    `ALTER TABLE ${USER_GROUPS_TABLE} ADD COLUMN parent_id INTEGER REFERENCES ${USER_GROUPS_TABLE}(id)`,
+    USER_GROUPS_PARENT_INDEX_DDL,
+    FEATURE_ENTITLEMENTS_TABLE_DDL,
+    FEATURE_ENTITLEMENTS_INDEX_DDL
   ]
 };
 var LEGACY_MIGRATIONS = [`ALTER TABLE surge_logs ADD COLUMN first_time TEXT NOT NULL DEFAULT ''`];
@@ -2003,7 +1848,10 @@ var CORE_TABLES = [
   "domain_summary",
   "rule_overrides",
   "turso_databases",
-  "user_roles"
+  "user_roles",
+  "audit_logs",
+  "feature_rollouts",
+  "feature_entitlements"
 ];
 async function detectMissingTables(db) {
   try {
@@ -2084,11 +1932,6 @@ async function ensureSchema(db) {
   if (db._schemaReady) return;
   await db.batch([{ sql: DB_META_SCHEMA }]);
   const version2 = await readSchemaVersion(db);
-  if (version2 != null && version2 <= DB_SCHEMA_VERSION && (await detectMissingTables(db)).length) {
-    await repairSchema(db);
-    db._schemaReady = true;
-    return;
-  }
   if (version2 == null) {
     if (await tableExists(db, "surge_logs")) {
       await migrateLegacy(db);
@@ -2106,6 +1949,11 @@ async function ensureSchema(db) {
     console.warn(
       `[db] \u6570\u636E\u5E93 schema \u7248\u672C (${version2}) \u6BD4\u4EE3\u7801\u671F\u671B (${DB_SCHEMA_VERSION}) \u65B0\uFF0C\u8BF7\u5347\u7EA7\u670D\u52A1\u7AEF\u90E8\u7F72`
     );
+    db._schemaReady = true;
+    return;
+  }
+  if ((await detectMissingTables(db)).length) {
+    await repairSchema(db);
   }
   db._schemaReady = true;
 }
@@ -2129,6 +1977,412 @@ async function describeSchemaState(db, table3, requiredColumns) {
 }
 __name(describeSchemaState, "describeSchemaState");
 
+// _utils/auth/rollouts.js
+var CACHE_TTL_MS = 3e4;
+var cache = null;
+var LIMITS = { whitelist: 100, groups: 50 };
+function fnv1a(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+__name(fnv1a, "fnv1a");
+function rolloutBucket(username, feature) {
+  return fnv1a(`${feature}:${String(username ?? "")}`) % 1e4 / 100;
+}
+__name(rolloutBucket, "rolloutBucket");
+async function readRolloutConfigs(db) {
+  if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.value;
+  const value = /* @__PURE__ */ new Map();
+  try {
+    const rows = await db.execute(`SELECT feature, config FROM ${FEATURE_ROLLOUTS_TABLE}`);
+    for (const row of rows) {
+      try {
+        value.set(String(row.feature), JSON.parse(String(row.config ?? "{}")));
+      } catch {
+      }
+    }
+  } catch {
+  }
+  cache = { at: Date.now(), value };
+  return value;
+}
+__name(readRolloutConfigs, "readRolloutConfigs");
+function invalidateRolloutCache() {
+  cache = null;
+}
+__name(invalidateRolloutCache, "invalidateRolloutCache");
+async function readRollout(db, feature) {
+  const configs = await readRolloutConfigs(db);
+  return configs.get(feature) ?? null;
+}
+__name(readRollout, "readRollout");
+async function listRollouts(db) {
+  const rows = await db.execute(
+    `SELECT feature, config, updated_at FROM ${FEATURE_ROLLOUTS_TABLE} ORDER BY feature`
+  );
+  return rows.map((row) => {
+    let config2 = {};
+    try {
+      config2 = JSON.parse(String(row.config ?? "{}"));
+    } catch {
+    }
+    return { feature: String(row.feature), config: config2, updatedAt: String(row.updated_at ?? "") };
+  });
+}
+__name(listRollouts, "listRollouts");
+async function writeRollout(db, feature, config2) {
+  const now2 = (/* @__PURE__ */ new Date()).toISOString();
+  await db.batch([
+    {
+      sql: `INSERT INTO ${FEATURE_ROLLOUTS_TABLE} (feature, config, updated_at)
+          VALUES (?, ?, ?)
+          ON CONFLICT(feature) DO UPDATE SET config = excluded.config, updated_at = excluded.updated_at`,
+      params: [feature, JSON.stringify(config2), now2]
+    }
+  ]);
+  invalidateRolloutCache();
+  return { feature, config: config2, updatedAt: now2 };
+}
+__name(writeRollout, "writeRollout");
+async function deleteRollout(db, feature) {
+  const result = await db.batch([
+    { sql: `DELETE FROM ${FEATURE_ROLLOUTS_TABLE} WHERE feature = ?`, params: [feature] }
+  ]);
+  invalidateRolloutCache();
+  const first = Array.isArray(result) ? result[0] : result;
+  return Number(first?.changes ?? first?.meta?.changes ?? 0) > 0;
+}
+__name(deleteRollout, "deleteRollout");
+function validateRolloutConfig(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { ok: false, error: "\u914D\u7F6E\u5FC5\u987B\u662F\u5BF9\u8C61" };
+  }
+  const known = ["whitelist", "groups", "percentage"];
+  const unknown = Object.keys(input).filter((key) => !known.includes(key));
+  if (unknown.length) return { ok: false, error: `\u672A\u77E5\u914D\u7F6E\u952E\uFF1A${unknown.join(", ")}` };
+  if (!known.some((key) => key in input)) {
+    return { ok: false, error: "\u81F3\u5C11\u63D0\u4F9B whitelist / groups / percentage \u4E4B\u4E00" };
+  }
+  const normalizeList = /* @__PURE__ */ __name((value, limit, label) => {
+    if (value === void 0) return void 0;
+    if (!Array.isArray(value)) return { error: `${label} \u5FC5\u987B\u662F\u5B57\u7B26\u4E32\u6570\u7EC4` };
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const item of value) {
+      const name = String(item ?? "").trim();
+      if (!name) continue;
+      if (name.length > 64) return { error: `${label} \u6761\u76EE\u8FC7\u957F\uFF08\u226464 \u5B57\u7B26\uFF09` };
+      if (!seen.has(name)) {
+        seen.add(name);
+        out.push(name);
+      }
+    }
+    if (out.length > limit) return { error: `${label} \u81F3\u591A ${limit} \u6761` };
+    return { value: out };
+  }, "normalizeList");
+  const whitelist = normalizeList(input.whitelist, LIMITS.whitelist, "\u767D\u540D\u5355");
+  if (whitelist?.error) return { ok: false, error: whitelist.error };
+  const groups = normalizeList(input.groups, LIMITS.groups, "\u7528\u6237\u7EC4");
+  if (groups?.error) return { ok: false, error: groups.error };
+  let percentage;
+  if (input.percentage !== void 0) {
+    percentage = Number(input.percentage);
+    if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
+      return { ok: false, error: "percentage \u5FC5\u987B\u662F 0\u2013100 \u7684\u6570\u5B57" };
+    }
+    percentage = Math.round(percentage * 100) / 100;
+  }
+  const config2 = {};
+  if (whitelist?.value) config2.whitelist = whitelist.value;
+  if (groups?.value) config2.groups = groups.value;
+  if (percentage !== void 0) config2.percentage = percentage;
+  return { ok: true, config: config2 };
+}
+__name(validateRolloutConfig, "validateRolloutConfig");
+function evaluateRollout(config2, principal, feature) {
+  if (!config2 || typeof config2 !== "object") return null;
+  const user = principal?.user;
+  const username = String(user?.username ?? "").trim();
+  if (!username) return null;
+  if (Array.isArray(config2.whitelist)) {
+    const uid = String(user?.uid ?? "");
+    const id = String(user?.id ?? "");
+    const hit = config2.whitelist.some((entry) => {
+      const name = String(entry).trim();
+      return name === username || uid && name === uid || id && name === id;
+    });
+    if (hit) return { allowed: true, reason: "rollout-whitelist" };
+  }
+  const groupName = String(principal?.group?.name ?? "").trim();
+  if (groupName && Array.isArray(config2.groups)) {
+    if (config2.groups.some((entry) => String(entry).trim() === groupName)) {
+      return { allowed: true, reason: "rollout-group" };
+    }
+  }
+  const percentage = Number(config2.percentage);
+  if (Number.isFinite(percentage) && percentage > 0) {
+    if (rolloutBucket(username, feature) < percentage) {
+      return { allowed: true, reason: "rollout-percentage" };
+    }
+  }
+  return { allowed: false, reason: "rollout-excluded" };
+}
+__name(evaluateRollout, "evaluateRollout");
+async function rolloutVerdict(db, principal, feature) {
+  if (!db || !principal || principal.type !== "user") return null;
+  const config2 = await readRollout(db, feature);
+  return evaluateRollout(config2, principal, feature);
+}
+__name(rolloutVerdict, "rolloutVerdict");
+async function rolloutsTableReady(db) {
+  try {
+    await db.execute(`SELECT 1 FROM ${FEATURE_ROLLOUTS_TABLE} LIMIT 1`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+__name(rolloutsTableReady, "rolloutsTableReady");
+
+// _utils/auth/policy.js
+var NO_STORE = { "Cache-Control": "no-store" };
+var FEATURES = {
+  "logs.write": "\u89C4\u5219\u5199\u64CD\u4F5C\uFF08\u66F4\u65B0 / \u5220\u9664 / \u6279\u91CF / \u6E05\u7A7A\uFF09",
+  "logs.view": "\u62A5\u9519\u4E0E\u65E5\u5FD7\u67E5\u770B\uFF08\u9519\u8BEF\u8BE6\u60C5\u4E0E\u9519\u8BEF\u65E5\u5FD7\u5F39\u7A97\uFF09",
+  "logs.clean": "\u6E05\u7406\u5DE5\u5177\uFF08\u5220\u9664\u8BB0\u5F55 / \u6279\u91CF\u6E05\u9664\u6CE8\u91CA\uFF09",
+  "danger.zone": "\u9AD8\u5371\u64CD\u4F5C\uFF08\u4E00\u952E\u6E05\u7A7A\u6570\u636E\u5E93\uFF09",
+  "rules.batch": "\u6279\u91CF\u6DFB\u52A0\u89C4\u5219",
+  "rules.quickedit": "\u5FEB\u901F\u7F16\u8F91\u89C4\u5219\uFF08\u66F4\u65B0 / \u5220\u9664 / \u6392\u9664\uFF09",
+  "export.filter": "\u7B56\u7565\u7EC4\uFF08\u8BA2\u9605\u5730\u5740 / \u7B56\u7565\u6E05\u5355\u4E0E\u8FC7\u6EE4\u8BBE\u7F6E\uFF09",
+  "subscribe.manage": "\u8BA2\u9605\u89E3\u6790\u4E0E\u7BA1\u7406",
+  "duty.view": "\u7528\u6237\u503C\u73ED\u770B\u677F",
+  "usage.cloudflare": "Cloudflare \u7528\u91CF",
+  "devices.view": "\u7528\u6237\u4E0E\u8BBE\u5907\u8BE6\u60C5\uFF08\u8BBE\u5907\u660E\u7EC6 / \u8D26\u53F7\u4FE1\u606F / \u79BB\u7EBF\u6B8B\u7559\u6E05\u7406\uFF09",
+  "health.check": "\u914D\u7F6E\u68C0\u6D4B\uFF08\u57FA\u7840 / \u6DF1\u5EA6\u68C0\u6D4B\u4E0E\u8BCA\u65AD\u62A5\u544A\uFF09",
+  "sync.gist": "\u4E91\u540C\u6B65\u4E0E Gist \u5907\u4EFD\uFF08\u914D\u7F6E / \u4E0A\u4F20 / \u8FD8\u539F\uFF09",
+  "ai.status": "AI \u961F\u5217\u4E0E\u8FD0\u884C\u72B6\u6001\uFF08\u542B\u5237\u65B0 / \u91CD\u7F6E\u5224\u5B9A\u6C47\u603B\uFF09",
+  "ai.prompt": "AI \u5206\u6D41\u63D0\u793A\u8BCD",
+  "ai.config": "AI \u8D26\u53F7\u4E0E\u6A21\u578B\uFF08\u8FDE\u63A5 / \u4E2D\u8F6C\u7AD9 / \u6A21\u578B\u6C60\uFF09",
+  "ai.schedule": "\u81EA\u52A8\u5316\u8C03\u5EA6",
+  "ai.runtime": "AI \u8FD0\u884C\u72B6\u6001\uFF08\u8D26\u53F7\u4E0E\u6A21\u578B\u5C42\u7EA7\u6811\uFF09",
+  "ai.page.judge": "\u6574\u9875 AI \u5224\u5B9A",
+  "ai.page.history": "\u5237\u65B0\u6574\u9875\u5386\u53F2",
+  "ai.run": "AI \u81EA\u52A8\u5206\u6D41\u6267\u884C",
+  "turso.manage": "Turso \u6570\u636E\u5E93\u7BA1\u7406\uFF08\u4EC5\u7BA1\u7406\u5458\u6709\u6548\uFF09",
+  "setup.wizard": "\u5B89\u88C5 / \u8BBE\u7F6E\u5411\u5BFC",
+  "users.manage": "\u7528\u6237\u4E0E\u6743\u9650\u7BA1\u7406\uFF08\u4EC5\u7BA1\u7406\u5458\u6709\u6548\uFF09"
+};
+var FEATURE_DEFAULTS = Object.freeze({
+  "logs.view": "deny",
+  "logs.clean": "deny",
+  "danger.zone": "deny",
+  "rules.batch": "deny",
+  "rules.quickedit": "deny",
+  "export.filter": "deny",
+  "subscribe.manage": "deny",
+  "duty.view": "deny",
+  "usage.cloudflare": "deny",
+  "devices.view": "deny",
+  "health.check": "deny",
+  "sync.gist": "deny",
+  "ai.status": "deny",
+  "ai.prompt": "deny",
+  "ai.config": "deny",
+  "ai.schedule": "deny",
+  "ai.runtime": "deny",
+  "turso.manage": "deny",
+  "setup.wizard": "deny"
+});
+var featurePolicies = /* @__PURE__ */ new Map();
+function mergedFeatures(principal) {
+  let groupFeatures = {};
+  for (const ancestor of principal?.group?.ancestors ?? []) {
+    groupFeatures = { ...groupFeatures, ...ancestor?.permissions?.features ?? {} };
+  }
+  return {
+    ...groupFeatures,
+    ...principal?.group?.permissions?.features ?? {},
+    ...principal?.user?.rolePermissions?.features ?? {},
+    ...principal?.user?.permissions?.features ?? {}
+  };
+}
+__name(mergedFeatures, "mergedFeatures");
+function featureDefault(feature) {
+  return FEATURE_DEFAULTS[feature] === "deny" ? "deny" : "allow";
+}
+__name(featureDefault, "featureDefault");
+async function evaluateFeature(principal, feature, context2 = {}) {
+  if (!principal) return { allowed: false, reason: "anonymous" };
+  if (principal.type === "token") return { allowed: true, reason: "legacy-token" };
+  if (principal.type === "anonymous-legacy") return { allowed: true, reason: "legacy-anonymous" };
+  if (principal.user?.role === "admin") return { allowed: true, reason: "admin" };
+  const dynamic = featurePolicies.get(feature);
+  if (dynamic) {
+    const verdict = await dynamic(principal, feature, context2);
+    if (verdict && typeof verdict === "object" && typeof verdict.allowed === "boolean") {
+      return verdict;
+    }
+  }
+  const rule = mergedFeatures(principal)[feature];
+  if (rule === "deny") return { allowed: false, reason: "permission-deny" };
+  if (rule === "allow") return { allowed: true, reason: "permission-allow" };
+  const rollout = await rolloutVerdict(context2?.db, principal, feature);
+  if (rollout) return rollout;
+  if (featureDefault(feature) === "deny") return { allowed: false, reason: "default-deny" };
+  return { allowed: true, reason: "default" };
+}
+__name(evaluateFeature, "evaluateFeature");
+async function evaluateAllFeatures(principal, context2 = {}) {
+  const access = {};
+  for (const feature of Object.keys(FEATURES)) {
+    access[feature] = (await evaluateFeature(principal, feature, context2)).allowed;
+  }
+  return access;
+}
+__name(evaluateAllFeatures, "evaluateAllFeatures");
+async function requireFeature(principal, feature, context2 = {}) {
+  const verdict = await evaluateFeature(principal, feature, context2);
+  if (verdict.allowed) return null;
+  return jsonResponse(
+    {
+      success: false,
+      error: `\u529F\u80FD\u5DF2\u88AB\u9650\u5236\uFF1A${FEATURES[feature] ?? feature}\uFF08${verdict.reason}\uFF09\u3002\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458\u8C03\u6574\u7528\u6237\u6216\u7528\u6237\u7EC4\u7684\u529F\u80FD\u6743\u9650\u3002`
+    },
+    { status: 403, headers: NO_STORE }
+  );
+}
+__name(requireFeature, "requireFeature");
+
+// _utils/users/core.js
+var USER_STATUSES = ["active", "disabled"];
+var BUILTIN_ROLES = [
+  {
+    name: "admin",
+    builtin: true,
+    permissions: {},
+    description: "\u8D85\u7EA7\u7BA1\u7406\u5458\uFF1A\u6743\u9650\u81EA\u9002\u5E94\u5168\u5F00\uFF08\u542B\u672A\u6765\u65B0\u589E\u529F\u80FD\uFF09\uFF0C\u65E0\u9700\u914D\u7F6E"
+  },
+  {
+    name: "user",
+    builtin: true,
+    permissions: {},
+    description: "\u666E\u901A\u7528\u6237\uFF1A\u9ED8\u8BA4\u53D7\u9650\uFF0C\u6309\u7EC4 / \u89D2\u8272 / \u7528\u6237\u914D\u7F6E\u653E\u884C"
+  }
+  // T33 #117：'test' 内置角色退役——不再合成、不可再赋值（validateRole 拒绝），
+  // 存量 role='test' 行由 v17 迁移默认禁用，展示分支（用户清单 / 芯片）保留
+];
+var USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,32}$/;
+var ACCOUNT_PATTERN = /^[\u4e00-\u9fa5A-Za-z0-9_-]{2,32}$/;
+var MAX_DISPLAY_NAME = 32;
+var DEFAULT_KEY_QUOTA = 0;
+var MAX_KEY_QUOTA = 1e6;
+var USER_LIST_COLUMNS = `id, username, uid, display_name, role, group_id, status, permissions, created_at, updated_at, last_login_at, user_key_preview, user_key_created_at, user_key_last_used_at, key_quota_total, key_quota_used, key_issued_at, key_issue_secret, is_builtin`;
+function validateRoleName(name) {
+  const value = String(name ?? "").trim();
+  if (!ACCOUNT_PATTERN.test(value)) return "\u89D2\u8272\u540D\u9700 2-32 \u4F4D\u4E2D\u6587\u3001\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26";
+  if (BUILTIN_ROLES.some((role) => role.name === value))
+    return `\u300C${value}\u300D\u662F\u5185\u7F6E\u89D2\u8272\uFF0C\u4E0D\u53EF\u5360\u7528`;
+  return "";
+}
+__name(validateRoleName, "validateRoleName");
+function keyQuotaView(total, used) {
+  const safeTotal = Number.isFinite(Number(total)) && Number(total) >= 0 ? Math.floor(Number(total)) : DEFAULT_KEY_QUOTA;
+  const safeUsed = Number.isFinite(Number(used)) && Number(used) >= 0 ? Math.floor(Number(used)) : 0;
+  if (safeTotal <= 0) return { total: 0, used: safeUsed, remaining: -1 };
+  return { total: safeTotal, used: safeUsed, remaining: Math.max(0, safeTotal - safeUsed) };
+}
+__name(keyQuotaView, "keyQuotaView");
+function validateUsername(username) {
+  const value = String(username ?? "").trim();
+  if (!ACCOUNT_PATTERN.test(value)) return "\u8D26\u53F7\u9700 2-32 \u4F4D\u4E2D\u6587\u3001\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26";
+  return "";
+}
+__name(validateUsername, "validateUsername");
+function validateUid(uid) {
+  const value = String(uid ?? "").trim();
+  if (!USERNAME_PATTERN.test(value)) return "UID \u9700 2-32 \u4F4D\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26";
+  return "";
+}
+__name(validateUid, "validateUid");
+function cleanDisplayName(value) {
+  return String(value ?? "").trim().slice(0, MAX_DISPLAY_NAME);
+}
+__name(cleanDisplayName, "cleanDisplayName");
+function parsePermissions(raw) {
+  try {
+    const parsed = JSON.parse(String(raw ?? "{}"));
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+__name(parsePermissions, "parsePermissions");
+function normalizeFeatures(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const features2 = {};
+  for (const [key, rule] of Object.entries(source)) {
+    if (typeof key === "string" && key.length > 0 && key.length <= 64 && (rule === "allow" || rule === "deny")) {
+      features2[key] = rule;
+    }
+  }
+  return features2;
+}
+__name(normalizeFeatures, "normalizeFeatures");
+function sanitizeUserRow(row) {
+  return {
+    id: Number(row.id),
+    username: String(row.username ?? ""),
+    uid: String(row.uid ?? ""),
+    displayName: String(row.display_name ?? ""),
+    role: String(row.role ?? "user"),
+    groupId: row.group_id == null ? null : Number(row.group_id),
+    status: String(row.status ?? "active"),
+    permissions: parsePermissions(row.permissions),
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? ""),
+    lastLoginAt: String(row.last_login_at ?? ""),
+    userKeyPreview: String(row.user_key_preview ?? ""),
+    userKeyCreatedAt: String(row.user_key_created_at ?? ""),
+    userKeyLastUsedAt: String(row.user_key_last_used_at ?? ""),
+    // 调用额度（v9）：remaining = total - used（下限 0，防脏数据出负数）
+    keyQuota: keyQuotaView(row.key_quota_total, row.key_quota_used),
+    // v1.27 内置测试账号：与普通用户同权同可编辑，唯一差异是不可删除
+    isBuiltin: Boolean(Number(row.is_builtin ?? 0))
+  };
+}
+__name(sanitizeUserRow, "sanitizeUserRow");
+function sanitizeGroupRow(row) {
+  return {
+    id: Number(row.id),
+    name: String(row.name ?? ""),
+    description: String(row.description ?? ""),
+    permissions: parsePermissions(row.permissions),
+    // v12：系统默认组（超级管理员 / 普通用户 / 游客 / 禁用）不可删除
+    isSystem: Boolean(Number(row.is_system ?? 0)),
+    // v20 组继承（T33-6 #137）：父组 ID；旧列 / 脏引用按无父处理（resolve 侧安全终止）
+    parentId: row.parent_id == null || Number.isNaN(Number(row.parent_id)) ? null : Number(row.parent_id),
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? "")
+  };
+}
+__name(sanitizeGroupRow, "sanitizeGroupRow");
+function sanitizeRoleRow(row) {
+  return {
+    id: Number(row.id),
+    name: String(row.name ?? ""),
+    description: String(row.description ?? ""),
+    permissions: parsePermissions(row.permissions),
+    builtin: false,
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? "")
+  };
+}
+__name(sanitizeRoleRow, "sanitizeRoleRow");
+
 // _utils/users/accounts.js
 async function countUsers(db) {
   const rows = await db.execute(`SELECT COUNT(*) AS n FROM ${USERS_TABLE}`);
@@ -2146,6 +2400,10 @@ async function countActiveAdmins(db) {
   return Number(rows[0]?.n ?? 0);
 }
 __name(countActiveAdmins, "countActiveAdmins");
+function isActiveAdmin(role, status4) {
+  return role === "admin" && status4 === "active";
+}
+__name(isActiveAdmin, "isActiveAdmin");
 async function singleAdminViolation(db, direction, verb = "\u64CD\u4F5C") {
   const admins = await countActiveAdmins(db);
   if (direction === "add" && admins >= 1) return "\u7CFB\u7EDF\u4EC5\u5141\u8BB8\u4E00\u4F4D\u8D85\u7EA7\u7BA1\u7406\u5458\uFF1A\u5DF2\u5B58\u5728\u8D85\u7EA7\u7BA1\u7406\u5458\u8D26\u53F7";
@@ -2191,7 +2449,7 @@ async function findUserByKeyHash(db, keyHash) {
     `SELECT u.id, u.username, u.uid, u.display_name, u.role, u.group_id, u.status, u.permissions,
             u.user_key_hash, u.user_key_preview, u.user_key_created_at, u.user_key_last_used_at,
             u.key_quota_total, u.key_quota_used,
-            g.permissions AS group_permissions, g.name AS group_name,
+            g.permissions AS group_permissions, g.name AS group_name, g.parent_id AS group_parent_id,
             r.permissions AS role_permissions
      FROM ${USERS_TABLE} u LEFT JOIN ${USER_GROUPS_TABLE} g ON g.id = u.group_id
      LEFT JOIN ${USER_ROLES_TABLE} r ON r.name = u.role
@@ -2216,7 +2474,8 @@ async function findUserByKeyHash(db, keyHash) {
     group: row.group_id != null ? {
       id: Number(row.group_id),
       name: String(row.group_name ?? ""),
-      permissions: parsePermissions(row.group_permissions)
+      permissions: parsePermissions(row.group_permissions),
+      parentId: row.group_parent_id == null ? null : Number(row.group_parent_id)
     } : null,
     userKey: {
       preview: String(row.user_key_preview ?? ""),
@@ -2450,9 +2709,9 @@ var SYSTEM_GROUPS = [
     name: "\u7981\u7528",
     description: "\u7CFB\u7EDF\u9ED8\u8BA4\u7EC4\uFF1A\u53D7\u9650\u8EAB\u4EFD\u7684\u9ED8\u8BA4\u6743\u9650\uFF08\u7981\u7528\u5199\u64CD\u4F5C\uFF09",
     features: { "logs.write": "deny", "rules.batch": "deny", "rules.quickedit": "deny" }
-  },
-  // v1.27：内置测试组——内置测试账号（test）的默认权限基线，权限调试的标准起点
-  { name: "test", description: "\u7CFB\u7EDF\u9ED8\u8BA4\u7EC4\uFF1A\u5185\u7F6E\u6D4B\u8BD5\u8D26\u53F7\u7684\u6743\u9650\u57FA\u7EBF\uFF08\u6743\u9650\u8C03\u8BD5\u7528\uFF09", features: {} }
+  }
+  // T33 #117：'test' 系统组退役——全新部署不再种入；存量组由 v17 迁移摘掉
+  // is_system 保护降为可删普通组（成员关系与数据保留，不丢数据）
 ];
 var systemGroupsSeeded = false;
 async function ensureSystemGroups(db) {
@@ -2481,6 +2740,70 @@ async function ensureSystemGroups(db) {
   }
 }
 __name(ensureSystemGroups, "ensureSystemGroups");
+var MAX_GROUP_DEPTH = 5;
+async function groupSubtreeHeight(db, groupId) {
+  let frontier = [Number(groupId)];
+  const seen = new Set(frontier);
+  let height = 0;
+  while (frontier.length && height < MAX_GROUP_DEPTH) {
+    const placeholders = frontier.map(() => "?").join(", ");
+    const rows = await db.execute(
+      `SELECT id FROM ${USER_GROUPS_TABLE} WHERE parent_id IN (${placeholders})`,
+      frontier
+    );
+    const next = rows.map((row) => Number(row.id)).filter((id) => !seen.has(id));
+    for (const id of next) seen.add(id);
+    frontier = next;
+    if (frontier.length) height += 1;
+  }
+  return height;
+}
+__name(groupSubtreeHeight, "groupSubtreeHeight");
+async function validateGroupParent(db, groupId, parentId) {
+  if (parentId === null || parentId === void 0 || parentId === "") return null;
+  const pid2 = Number(parentId);
+  if (!Number.isInteger(pid2) || pid2 < 1) return "\u7236\u7EC4 ID \u65E0\u6548";
+  if (groupId != null && pid2 === Number(groupId)) return "\u4E0D\u80FD\u628A\u7EC4\u8BBE\u4E3A\u81EA\u5DF1\u7684\u7236\u7EC4";
+  let current = await getGroupById(db, pid2);
+  if (!current) return `\u7236\u7EC4\u4E0D\u5B58\u5728\uFF1A${pid2}`;
+  let depth = 1;
+  const seen = /* @__PURE__ */ new Set([pid2]);
+  while (current?.parentId != null) {
+    if (groupId != null && Number(current.parentId) === Number(groupId)) {
+      return "\u68C0\u6D4B\u5230\u7EC4\u7EE7\u627F\u73AF";
+    }
+    if (seen.has(Number(current.parentId))) return "\u68C0\u6D4B\u5230\u7EC4\u7EE7\u627F\u73AF";
+    seen.add(Number(current.parentId));
+    depth += 1;
+    if (depth > MAX_GROUP_DEPTH) {
+      return `\u7EC4\u7EE7\u627F\u6DF1\u5EA6\u8D85\u8FC7\u4E0A\u9650\uFF08${MAX_GROUP_DEPTH} \u5C42\uFF09`;
+    }
+    current = await getGroupById(db, current.parentId);
+    if (!current) break;
+  }
+  if (groupId != null) {
+    const subtree = await groupSubtreeHeight(db, groupId);
+    if (depth + subtree > MAX_GROUP_DEPTH) {
+      return `\u7EC4\u7EE7\u627F\u6DF1\u5EA6\u8D85\u8FC7\u4E0A\u9650\uFF08${MAX_GROUP_DEPTH} \u5C42\uFF09\uFF1A\u542B\u5B50\u6811\u5C06\u8FBE ${depth + subtree} \u5C42`;
+    }
+  }
+  return null;
+}
+__name(validateGroupParent, "validateGroupParent");
+async function getGroupAncestors(db, groupId) {
+  const chain = [];
+  const seen = /* @__PURE__ */ new Set();
+  let currentId = groupId;
+  while (currentId != null && !seen.has(currentId) && chain.length <= MAX_GROUP_DEPTH) {
+    seen.add(currentId);
+    const group3 = await getGroupById(db, currentId);
+    if (!group3) break;
+    chain.push(group3);
+    currentId = group3.parentId;
+  }
+  return chain.slice(1).reverse();
+}
+__name(getGroupAncestors, "getGroupAncestors");
 async function listGroups(db) {
   await ensureSystemGroups(db);
   return listGroupsRaw(db);
@@ -2489,7 +2812,7 @@ __name(listGroups, "listGroups");
 async function listGroupsRaw(db) {
   const rows = await db.execute(
     // 系统默认组恒排最前：标准起点永远在列表头部（旧库补种的 id 也靠后）
-    `SELECT id, name, description, permissions, is_system, created_at, updated_at
+    `SELECT id, name, description, permissions, is_system, parent_id, created_at, updated_at
      FROM ${USER_GROUPS_TABLE} ORDER BY is_system DESC, id ASC`
   );
   return rows.map(sanitizeGroupRow);
@@ -2497,35 +2820,36 @@ async function listGroupsRaw(db) {
 __name(listGroupsRaw, "listGroupsRaw");
 async function getGroupById(db, id) {
   const rows = await db.execute(
-    `SELECT id, name, description, permissions, is_system, created_at, updated_at FROM ${USER_GROUPS_TABLE} WHERE id = ?`,
+    `SELECT id, name, description, permissions, is_system, parent_id, created_at, updated_at FROM ${USER_GROUPS_TABLE} WHERE id = ?`,
     [id]
   );
   const row = rows[0];
   return row ? sanitizeGroupRow(row) : null;
 }
 __name(getGroupById, "getGroupById");
-async function createGroup(db, { name, description = "", permissions = "{}" }) {
+async function createGroup(db, { name, description = "", permissions = "{}", parentId = null }) {
   const now2 = (/* @__PURE__ */ new Date()).toISOString();
   await db.batch([
     {
-      sql: `INSERT INTO ${USER_GROUPS_TABLE} (name, description, permissions, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO ${USER_GROUPS_TABLE} (name, description, permissions, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
       params: [
         String(name).trim(),
         String(description ?? "").trim().slice(0, 128),
         permissions,
+        parentId == null || parentId === "" ? null : Number(parentId),
         now2,
         now2
       ]
     }
   ]);
   const rows = await db.execute(
-    `SELECT id, name, description, permissions, is_system, created_at, updated_at FROM ${USER_GROUPS_TABLE} WHERE name = ?`,
+    `SELECT id, name, description, permissions, is_system, parent_id, created_at, updated_at FROM ${USER_GROUPS_TABLE} WHERE name = ?`,
     [String(name).trim()]
   );
   return sanitizeGroupRow(rows[0]);
 }
 __name(createGroup, "createGroup");
-async function updateGroup(db, id, { name, description, permissions }) {
+async function updateGroup(db, id, { name, description, permissions, parentId }) {
   const sets = [];
   const params = [];
   if (name !== void 0) {
@@ -2539,6 +2863,10 @@ async function updateGroup(db, id, { name, description, permissions }) {
   if (permissions !== void 0) {
     sets.push("permissions = ?");
     params.push(permissions);
+  }
+  if (parentId !== void 0) {
+    sets.push("parent_id = ?");
+    params.push(parentId == null || parentId === "" ? null : Number(parentId));
   }
   if (sets.length) {
     sets.push("updated_at = ?");
@@ -2555,6 +2883,10 @@ async function deleteGroup(db, id) {
   await db.batch([
     {
       sql: `UPDATE ${USERS_TABLE} SET group_id = NULL, updated_at = ? WHERE group_id = ?`,
+      params: [(/* @__PURE__ */ new Date()).toISOString(), id]
+    },
+    {
+      sql: `UPDATE ${USER_GROUPS_TABLE} SET parent_id = NULL, updated_at = ? WHERE parent_id = ?`,
       params: [(/* @__PURE__ */ new Date()).toISOString(), id]
     },
     { sql: `DELETE FROM ${USER_GROUPS_TABLE} WHERE id = ?`, params: [id] }
@@ -2648,41 +2980,42 @@ __name(verifyPassword, "verifyPassword");
 
 // _utils/users/bootstrap.js
 var BUILTIN_TEST_ACCOUNT = Object.freeze({
-  username: "test",
-  password: "test123",
-  displayName: "\u5185\u7F6E\u6D4B\u8BD5\u8D26\u53F7"
+  username: "test"
 });
-var builtinTestUserSeeded = false;
+var LEGACY_BUILTIN_TEST_PASSWORD = "test123";
+function isLegacyBuiltinCredential(row, password) {
+  return String(row?.username ?? "") === BUILTIN_TEST_ACCOUNT.username && String(row?.role ?? "") === "test" && password === LEGACY_BUILTIN_TEST_PASSWORD;
+}
+__name(isLegacyBuiltinCredential, "isLegacyBuiltinCredential");
+function generateBuiltinPassword() {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+__name(generateBuiltinPassword, "generateBuiltinPassword");
+var builtinTestChecked = false;
 async function ensureBuiltinTestUser(db) {
-  if (builtinTestUserSeeded) return;
-  builtinTestUserSeeded = true;
+  if (builtinTestChecked) return null;
+  builtinTestChecked = true;
   try {
-    const existing = await db.execute(
-      `SELECT id FROM ${USERS_TABLE} WHERE is_builtin = 1 OR username = ? LIMIT 1`,
+    const legacy = await db.execute(
+      `SELECT id, password_hash FROM ${USERS_TABLE} WHERE username = ? AND role = 'test' LIMIT 1`,
       [BUILTIN_TEST_ACCOUNT.username]
     );
-    if (existing.length) return;
-    await ensureSystemGroups(db);
-    const groups = await listGroupsRaw(db);
-    const group3 = groups.find((item) => item.name === "test");
-    const now2 = (/* @__PURE__ */ new Date()).toISOString();
-    await db.batch([
-      {
-        sql: `INSERT INTO ${USERS_TABLE} (username, uid, display_name, password_hash, role, group_id, status, permissions, created_at, updated_at, is_builtin)
-              VALUES (?, ?, ?, ?, 'test', ?, 'active', '{}', ?, ?, 1)`,
-        params: [
-          BUILTIN_TEST_ACCOUNT.username,
-          BUILTIN_TEST_ACCOUNT.username,
-          BUILTIN_TEST_ACCOUNT.displayName,
-          await hashPassword(BUILTIN_TEST_ACCOUNT.password),
-          group3 ? group3.id : null,
-          now2,
-          now2
-        ]
-      }
-    ]);
+    if (legacy.length && await verifyPassword(LEGACY_BUILTIN_TEST_PASSWORD, legacy[0].password_hash)) {
+      const password = generateBuiltinPassword();
+      await db.batch([
+        {
+          sql: `UPDATE ${USERS_TABLE} SET password_hash = ?, updated_at = ? WHERE id = ?`,
+          params: [await hashPassword(password), (/* @__PURE__ */ new Date()).toISOString(), legacy[0].id]
+        }
+      ]);
+      return { username: BUILTIN_TEST_ACCOUNT.username, password };
+    }
+    return null;
   } catch {
-    builtinTestUserSeeded = false;
+    builtinTestChecked = false;
+    return null;
   }
 }
 __name(ensureBuiltinTestUser, "ensureBuiltinTestUser");
@@ -2797,6 +3130,54 @@ async function validateRoleValue(db, role) {
 }
 __name(validateRoleValue, "validateRoleValue");
 
+// _utils/users/audit.js
+function auditActorFrom(principal) {
+  if (!principal) return { actorId: null, actorLabel: "system" };
+  if (principal.type === "user") {
+    return {
+      actorId: principal.user?.id ?? null,
+      actorLabel: String(principal.user?.username ?? "unknown")
+    };
+  }
+  if (principal.type === "token") return { actorId: null, actorLabel: "\u7BA1\u7406\u4EE4\u724C" };
+  if (principal.type === "anonymous-legacy") return { actorId: null, actorLabel: "\u65E7\u90E8\u7F72\u56DE\u843D" };
+  return { actorId: null, actorLabel: "system" };
+}
+__name(auditActorFrom, "auditActorFrom");
+async function recordAudit(db, actor, action, objectType, objectId, objectLabel, summary) {
+  const { actorId, actorLabel } = auditActorFrom(actor);
+  try {
+    await db.batch([
+      {
+        sql: `INSERT INTO ${AUDIT_LOGS_TABLE} (actor_id, actor_label, action, object_type, object_id, object_label, summary, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        params: [
+          actorId,
+          actorLabel,
+          String(action ?? ""),
+          String(objectType ?? ""),
+          String(objectId ?? ""),
+          String(objectLabel ?? ""),
+          String(summary ?? ""),
+          (/* @__PURE__ */ new Date()).toISOString()
+        ]
+      }
+    ]);
+  } catch (error3) {
+    console.warn("[audit] \u5BA1\u8BA1\u5199\u5165\u5931\u8D25", action, objectType, error3?.message ?? error3);
+  }
+}
+__name(recordAudit, "recordAudit");
+async function listAuditLogs(db, limit = 100) {
+  const bounded = Math.min(Math.max(Number(limit) || 100, 1), 500);
+  return db.execute(
+    `SELECT id, actor_id, actor_label, action, object_type, object_id, object_label, summary, created_at
+     FROM ${AUDIT_LOGS_TABLE} ORDER BY id DESC LIMIT ?`,
+    [bounded]
+  );
+}
+__name(listAuditLogs, "listAuditLogs");
+
 // _utils/auth/sessions.js
 var SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1e3;
 var MAX_USER_AGENT_LENGTH = 200;
@@ -2837,7 +3218,7 @@ async function findLiveSession(db, token, nowMs = Date.now()) {
     `SELECT s.token_hash, s.user_id, s.expires_at, s.created_at, s.user_agent,
             u.id AS u_id, u.username, u.display_name, u.role, u.group_id, u.status, u.permissions,
            u.uid,
-            g.permissions AS group_permissions, g.name AS group_name,
+            g.permissions AS group_permissions, g.name AS group_name, g.parent_id AS group_parent_id,
             r.permissions AS role_permissions
      FROM ${AUTH_SESSIONS_TABLE} s JOIN users u ON u.id = s.user_id
      LEFT JOIN user_groups g ON g.id = u.group_id
@@ -3735,8 +4116,8 @@ function normalizeDeviceType(value) {
 __name(normalizeDeviceType, "normalizeDeviceType");
 
 // _utils/build-meta.js
-var BUILD_LABEL = "1.32.0 (c7cf583)";
-var COMPONENT_VERSIONS = { panel: "1.32.0", logger: "1.32.0", sgmodule: "1.32.0" };
+var BUILD_LABEL = "1.33.0 (12aec4a)";
+var COMPONENT_VERSIONS = { panel: "1.33.0", logger: "1.33.0", sgmodule: "1.33.0" };
 var PANEL_ORIGIN = "https://final-axx.pages.dev";
 
 // _utils/devices/version.js
@@ -4033,106 +4414,7 @@ function selectCleanupTargets(devices, { mode = "unbound", olderThanDays = 30, b
 }
 __name(selectCleanupTargets, "selectCleanupTargets");
 
-// _utils/devices/store.js
-async function touchDevice(db, {
-  clientId = "",
-  name = "",
-  username = "",
-  ip = "",
-  panelVersion = "",
-  loggerVersion = "",
-  refreshSeconds = 0,
-  deviceType = "",
-  platformParams = null,
-  resources = null
-} = {}) {
-  const deviceId = buildDeviceId({ clientId, name, username, ip });
-  if (!deviceId || deviceId === "dev:*|*|*") return null;
-  const now2 = (/* @__PURE__ */ new Date()).toISOString();
-  const cleanVersion = /* @__PURE__ */ __name((value) => String(value ?? "").trim().slice(0, MAX_VERSION_LENGTH), "cleanVersion");
-  const incomingPanel = cleanVersion(panelVersion);
-  const incomingLogger = cleanVersion(loggerVersion);
-  const deviceName = normalizeSource(name);
-  const deviceUsername = normalizeUsername(username);
-  const deviceIp = normalizeIp(ip);
-  const refresh = Math.max(0, Math.floor(Number(refreshSeconds) || 0));
-  const type = normalizeDeviceType(deviceType);
-  const incomingResources = serializeResourceSnapshot(resources);
-  let previous = {
-    panel_version: "",
-    logger_version: "",
-    device_type: "",
-    platform_params: "",
-    resources: ""
-  };
-  try {
-    const [row] = await db.execute(
-      `SELECT panel_version, logger_version, device_type, platform_params, resources FROM ${DEVICES_TABLE} WHERE device_id = ?`,
-      [deviceId]
-    );
-    if (row) {
-      previous = {
-        panel_version: String(row.panel_version ?? ""),
-        logger_version: String(row.logger_version ?? ""),
-        device_type: String(row.device_type ?? ""),
-        platform_params: String(row.platform_params ?? ""),
-        resources: String(row.resources ?? "")
-      };
-    }
-  } catch {
-  }
-  const mergedPanel = incomingPanel || previous.panel_version;
-  const mergedLogger = incomingLogger || previous.logger_version;
-  const mergedType = type || previous.device_type;
-  const mergedParams = {
-    ...parsePlatformParams(previous.platform_params),
-    ...platformParams ?? {}
-  };
-  const effectiveLogger = mergedLogger || (mergedType === DEVICE_TYPE.ROUTER_PLUGIN ? String(mergedParams.pluginVersion ?? "") : "");
-  const inputs = versionInputsFor(mergedType, {
-    panelVersion: mergedPanel,
-    loggerVersion: effectiveLogger,
-    platformParams: mergedParams
-  });
-  const status4 = inputs ? configStatusFromVersions(inputs.panelVersion, inputs.loggerVersion) : DEVICE_CONFIG_STATUS.LATEST;
-  await db.batch([
-    {
-      sql: `INSERT INTO ${DEVICES_TABLE} (device_id, name, username, ip, panel_version, logger_version, config_status, refresh_seconds, last_online_time, first_seen, updated_at, device_type, platform_params, resources)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(device_id) DO UPDATE SET
-              name = CASE WHEN excluded.name != '' THEN excluded.name ELSE ${DEVICES_TABLE}.name END,
-              username = CASE WHEN excluded.username != '' THEN excluded.username ELSE ${DEVICES_TABLE}.username END,
-              ip = CASE WHEN excluded.ip != '' THEN excluded.ip ELSE ${DEVICES_TABLE}.ip END,
-              panel_version = CASE WHEN excluded.panel_version != '' THEN excluded.panel_version ELSE ${DEVICES_TABLE}.panel_version END,
-              logger_version = CASE WHEN excluded.logger_version != '' THEN excluded.logger_version ELSE ${DEVICES_TABLE}.logger_version END,
-              config_status = excluded.config_status,
-              refresh_seconds = CASE WHEN excluded.refresh_seconds > 0 THEN excluded.refresh_seconds ELSE ${DEVICES_TABLE}.refresh_seconds END,
-              last_online_time = excluded.last_online_time,
-              updated_at = excluded.updated_at,
-              device_type = CASE WHEN excluded.device_type != '' THEN excluded.device_type ELSE ${DEVICES_TABLE}.device_type END,
-              platform_params = excluded.platform_params,
-              resources = CASE WHEN excluded.resources != '' THEN excluded.resources ELSE ${DEVICES_TABLE}.resources END`,
-      params: [
-        deviceId,
-        deviceName,
-        deviceUsername,
-        deviceIp,
-        mergedPanel,
-        effectiveLogger,
-        status4,
-        refresh,
-        now2,
-        now2,
-        now2,
-        mergedType,
-        serializePlatformParams(mergedParams),
-        incomingResources || previous.resources
-      ]
-    }
-  ]);
-  return { deviceId, configStatus: status4 };
-}
-__name(touchDevice, "touchDevice");
+// _utils/devices/rows.js
 function normalizeDeviceRow(row, nowMs, currentRevisions = {}) {
   const name = String(row.name ?? "");
   const username = String(row.username ?? "");
@@ -4180,6 +4462,135 @@ function normalizeDeviceRow(row, nowMs, currentRevisions = {}) {
   };
 }
 __name(normalizeDeviceRow, "normalizeDeviceRow");
+
+// _utils/devices/store.js
+async function touchDevice(db, {
+  clientId = "",
+  name = "",
+  username = "",
+  ip = "",
+  panelVersion = "",
+  loggerVersion = "",
+  refreshSeconds = 0,
+  deviceType = "",
+  platformParams = null,
+  resources = null
+} = {}) {
+  const deviceId = buildDeviceId({ clientId, name, username, ip });
+  if (!deviceId || deviceId === "dev:*|*|*") return null;
+  const now2 = (/* @__PURE__ */ new Date()).toISOString();
+  const cleanVersion = /* @__PURE__ */ __name((value) => String(value ?? "").trim().slice(0, MAX_VERSION_LENGTH), "cleanVersion");
+  const input = {
+    panelVersion: cleanVersion(panelVersion),
+    loggerVersion: cleanVersion(loggerVersion),
+    type: normalizeDeviceType(deviceType),
+    platformParams
+  };
+  const previous = await readPreviousTouch(db, deviceId);
+  const merged = mergeTouchInput(input, previous, serializeResourceSnapshot(resources));
+  await upsertDeviceRow(db, {
+    deviceId,
+    name: normalizeSource(name),
+    username: normalizeUsername(username),
+    ip: normalizeIp(ip),
+    refresh: Math.max(0, Math.floor(Number(refreshSeconds) || 0)),
+    now: now2,
+    ...merged
+  });
+  return { deviceId, configStatus: merged.status };
+}
+__name(touchDevice, "touchDevice");
+async function readPreviousTouch(db, deviceId) {
+  let previous = {
+    panel_version: "",
+    logger_version: "",
+    device_type: "",
+    platform_params: "",
+    resources: ""
+  };
+  try {
+    const [row] = await db.execute(
+      `SELECT panel_version, logger_version, device_type, platform_params, resources FROM ${DEVICES_TABLE} WHERE device_id = ?`,
+      [deviceId]
+    );
+    if (row) {
+      previous = {
+        panel_version: String(row.panel_version ?? ""),
+        logger_version: String(row.logger_version ?? ""),
+        device_type: String(row.device_type ?? ""),
+        platform_params: String(row.platform_params ?? ""),
+        resources: String(row.resources ?? "")
+      };
+    }
+  } catch {
+  }
+  return previous;
+}
+__name(readPreviousTouch, "readPreviousTouch");
+function mergeTouchInput(input, previous, incomingResources) {
+  const mergedPanel = input.panelVersion || previous.panel_version;
+  const mergedLogger = input.loggerVersion || previous.logger_version;
+  const mergedType = input.type || previous.device_type;
+  const mergedParams = {
+    ...parsePlatformParams(previous.platform_params),
+    ...input.platformParams ?? {}
+  };
+  const effectiveLogger = mergedLogger || (mergedType === DEVICE_TYPE.ROUTER_PLUGIN ? String(mergedParams.pluginVersion ?? "") : "");
+  const inputs = versionInputsFor(mergedType, {
+    panelVersion: mergedPanel,
+    loggerVersion: effectiveLogger,
+    platformParams: mergedParams
+  });
+  const status4 = inputs ? configStatusFromVersions(inputs.panelVersion, inputs.loggerVersion) : DEVICE_CONFIG_STATUS.LATEST;
+  return {
+    mergedPanel,
+    effectiveLogger,
+    mergedType,
+    mergedParams,
+    status: status4,
+    incomingResources,
+    previousResources: previous.resources
+  };
+}
+__name(mergeTouchInput, "mergeTouchInput");
+async function upsertDeviceRow(db, row) {
+  await db.batch([
+    {
+      sql: `INSERT INTO ${DEVICES_TABLE} (device_id, name, username, ip, panel_version, logger_version, config_status, refresh_seconds, last_online_time, first_seen, updated_at, device_type, platform_params, resources)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(device_id) DO UPDATE SET
+              name = CASE WHEN excluded.name != '' THEN excluded.name ELSE ${DEVICES_TABLE}.name END,
+              username = CASE WHEN excluded.username != '' THEN excluded.username ELSE ${DEVICES_TABLE}.username END,
+              ip = CASE WHEN excluded.ip != '' THEN excluded.ip ELSE ${DEVICES_TABLE}.ip END,
+              panel_version = CASE WHEN excluded.panel_version != '' THEN excluded.panel_version ELSE ${DEVICES_TABLE}.panel_version END,
+              logger_version = CASE WHEN excluded.logger_version != '' THEN excluded.logger_version ELSE ${DEVICES_TABLE}.logger_version END,
+              config_status = excluded.config_status,
+              refresh_seconds = CASE WHEN excluded.refresh_seconds > 0 THEN excluded.refresh_seconds ELSE ${DEVICES_TABLE}.refresh_seconds END,
+              last_online_time = excluded.last_online_time,
+              updated_at = excluded.updated_at,
+              device_type = CASE WHEN excluded.device_type != '' THEN excluded.device_type ELSE ${DEVICES_TABLE}.device_type END,
+              platform_params = excluded.platform_params,
+              resources = CASE WHEN excluded.resources != '' THEN excluded.resources ELSE ${DEVICES_TABLE}.resources END`,
+      params: [
+        row.deviceId,
+        row.name,
+        row.username,
+        row.ip,
+        row.mergedPanel,
+        row.effectiveLogger,
+        row.status,
+        row.refresh,
+        row.now,
+        row.now,
+        row.now,
+        row.mergedType,
+        serializePlatformParams(row.mergedParams),
+        row.incomingResources || row.previousResources
+      ]
+    }
+  ]);
+}
+__name(upsertDeviceRow, "upsertDeviceRow");
 async function listDevices(db, { limit = 100, deviceType = "", username = "", collapse = true, exportVersions = null } = {}) {
   const nowMs = Date.now();
   const filters = [];
@@ -4372,7 +4783,7 @@ async function sessionPrincipal(db, token, context2 = null) {
   if (!row) return null;
   if (String(row.status ?? "active") !== "active") return null;
   deferBackgroundWrite(context2, touchSession(db, row.token_hash));
-  return {
+  const principal = {
     type: "user",
     user: {
       id: Number(row.u_id),
@@ -4389,10 +4800,13 @@ async function sessionPrincipal(db, token, context2 = null) {
     group: row.group_id != null ? {
       id: Number(row.group_id),
       name: String(row.group_name ?? ""),
-      permissions: parsePermissions(row.group_permissions)
+      permissions: parsePermissions(row.group_permissions),
+      parentId: row.group_parent_id == null ? null : Number(row.group_parent_id)
     } : null,
     session: { tokenHash: row.token_hash, expiresAt: String(row.expires_at ?? "") }
   };
+  await attachGroupAncestors(db, principal);
+  return principal;
 }
 __name(sessionPrincipal, "sessionPrincipal");
 async function userKeyPrincipal(env2, db, request, context2 = null) {
@@ -4431,11 +4845,13 @@ async function userKeyPrincipal(env2, db, request, context2 = null) {
       refreshSeconds: device.refreshSeconds
     })
   );
-  return {
+  const principal = {
     type: "user",
     user: {
       id: matched.id,
       username: matched.username,
+      // uid 随身份透传（T33-7 #138）：灰度白名单 uid 形态在密钥通道同款命中
+      uid: String(matched.uid ?? ""),
       displayName: matched.displayName,
       role: matched.role,
       groupId: matched.groupId,
@@ -4449,8 +4865,21 @@ async function userKeyPrincipal(env2, db, request, context2 = null) {
     // 额度随身份透传：/stats 据此在耗尽前带回预警（审计 P1-2 方案 C）
     keyQuota: matched.keyQuota
   };
+  await attachGroupAncestors(db, principal);
+  return principal;
 }
 __name(userKeyPrincipal, "userKeyPrincipal");
+async function attachGroupAncestors(db, principal) {
+  const group3 = principal?.group;
+  if (!group3) return principal;
+  if (group3.parentId == null) {
+    group3.ancestors = [];
+    return principal;
+  }
+  group3.ancestors = await getGroupAncestors(db, group3.id);
+  return principal;
+}
+__name(attachGroupAncestors, "attachGroupAncestors");
 async function resolvePrincipal(env2, db, request, token, context2 = null) {
   const session = await sessionPrincipal(db, token, context2);
   if (session) return session;
@@ -4533,7 +4962,7 @@ async function requireReportAuth(env2, db, context2) {
   const principal = await resolvePrincipal(env2, db, context2.request, supplied, context2);
   if (principal?.type === "user") return { ok: true, principal };
   if (principal?.type === "invalid-key") {
-    return { ok: false, response: invalidKeyResponse(principal) };
+    return { ok: false, principal, response: invalidKeyResponse(principal) };
   }
   if (anyConfiguredToken(env2).length) {
     const denied = requireHitToken(env2, supplied);
@@ -4578,11 +5007,10 @@ async function guardPrincipal(env2, db, request, context2, { auth = "mutation", 
   else gate = await requireMutationAuth(env2, db, request, context2);
   if (!gate.ok) return gate;
   if (feature) {
-    const denied = await requireFeature(
-      gate.principal,
-      feature,
-      featurePath ? { path: featurePath } : {}
-    );
+    const denied = await requireFeature(gate.principal, feature, {
+      path: featurePath,
+      db
+    });
     if (denied) return { ok: false, response: denied };
   }
   return { ok: true, principal: gate.principal };
@@ -4816,17 +5244,17 @@ function signatureFor(env2, backend) {
   return `d1|${bindingIds.get(binding2)}`;
 }
 __name(signatureFor, "signatureFor");
-var cache = /* @__PURE__ */ new Map();
+var cache2 = /* @__PURE__ */ new Map();
 async function getAdapter(env2) {
   const backend = resolveDbBackend(env2);
   const signature = signatureFor(env2, backend);
-  const existing = cache.get(signature);
+  const existing = cache2.get(signature);
   if (existing) {
     try {
       await existing.ready;
       return existing;
     } catch (error3) {
-      cache.delete(signature);
+      cache2.delete(signature);
       throw error3;
     }
   }
@@ -4837,11 +5265,11 @@ async function getAdapter(env2) {
     await adapter.init(env2);
     await ensureSchema(adapter);
   })();
-  cache.set(signature, adapter);
+  cache2.set(signature, adapter);
   try {
     await adapter.ready;
   } catch (error3) {
-    cache.delete(signature);
+    cache2.delete(signature);
     throw error3;
   }
   return adapter;
@@ -4989,7 +5417,171 @@ function checkConfig(env2) {
 }
 __name(checkConfig, "checkConfig");
 
+// api/_health/schema-checks.js
+function schemaCheck() {
+  return check(
+    3,
+    "Schema \u4E00\u81F4\u6027",
+    "database",
+    DOC.schema,
+    async (ctx) => {
+      const state = await describeSchemaState(ctx.db, "surge_logs", REQUIRED_LOG_COLUMNS);
+      if (!state.ok)
+        return {
+          status: "fail",
+          detail: state.detail,
+          fix: "\u90E8\u7F72\u540E\u8BBF\u95EE /api/schema \u53D6\u5EFA\u8868\u8BED\u53E5\uFF0C\u6216\u7B49\u5F85\u9996\u6B21\u8BBF\u95EE\u81EA\u52A8\u8FC1\u79FB"
+        };
+      const devices = await describeSchemaState(ctx.db, "devices", [
+        ...REQUIRED_DEVICE_COLUMNS,
+        "device_type"
+      ]);
+      if (!devices.ok)
+        return {
+          status: "fail",
+          detail: devices.detail,
+          fix: "\u9996\u6B21\u8BBF\u95EE\u4EFB\u610F /api \u63A5\u53E3\u4F1A\u81EA\u52A8\u8FC1\u79FB\uFF1B\u4E5F\u53EF\u8BBF\u95EE /api/schema \u53D6\u5EFA\u8868\u8BED\u53E5\u624B\u5DE5\u6267\u884C"
+        };
+      const verdict = await describeSchemaState(ctx.db, "domain_summary", [
+        "domain",
+        "best_action",
+        "direct_votes",
+        "proxy_votes",
+        "reject_votes",
+        "avg_confidence",
+        "last_checked_at",
+        "cooldown_days",
+        "latest_comment",
+        "pinned_comment",
+        "pinned_kind"
+      ]);
+      const queries = await describeSchemaState(ctx.db, "domain_queries", [
+        "domain",
+        "action",
+        "confidence",
+        "model_name",
+        "comment",
+        "kind",
+        "created_at"
+      ]);
+      const verdictOk = verdict.ok && queries.ok;
+      const label = ctx.db.backend === "turso" ? "Turso" : ctx.db.backend === "d1" ? "D1" : "SQLite";
+      return {
+        status: verdictOk ? "pass" : "warn",
+        detail: `${state.detail}\uFF1Bdevices \u6CE8\u518C\u8868\u9F50\u5168\uFF1B${verdictOk ? "AI \u5224\u5B9A\u53CC\u8868\u9F50\u5168" : `AI \u5224\u5B9A\u53CC\u8868\u5F85\u8FC1\u79FB\uFF08${queries.detail}\uFF1B${verdict.detail}\uFF09`}\uFF1BDB_SCHEMA_VERSION = ${DB_SCHEMA_VERSION}\uFF08${label}\uFF09`,
+        fix: verdictOk ? "" : "\u9996\u6B21\u8BBF\u95EE\u4EFB\u610F /api \u63A5\u53E3\u4F1A\u81EA\u52A8\u8FC1\u79FB\uFF1B\u4E5F\u53EF\u8BBF\u95EE /api/schema \u53D6\u5EFA\u8868\u8BED\u53E5\u624B\u5DE5\u6267\u884C"
+      };
+    },
+    { needsDb: true }
+  );
+}
+__name(schemaCheck, "schemaCheck");
+function probeChecks() {
+  return [
+    check(
+      5,
+      "\u5199\u63A2\u9488\uFF08\u5199\u5165\u4E34\u65F6\u884C\uFF09",
+      "database",
+      DOC.probe,
+      async (ctx) => {
+        ctx.probe = await runProbe(ctx.db);
+        if (!ctx.probe.writeOk)
+          return {
+            status: "fail",
+            detail: "\u63A2\u9488\u884C\u672A\u5199\u5165\uFF08\u6743\u9650 / \u914D\u989D / \u9501\u51B2\u7A81\uFF09",
+            fix: "\u68C0\u67E5\u6570\u636E\u5E93\u8D26\u53F7\u7684\u5199\u6743\u9650\u4E0E\u914D\u989D"
+          };
+        return { status: "pass", detail: "health_probe \u5199\u5165\u6210\u529F\uFF08\u540C\u4E00\u4E8B\u52A1\uFF0C\u7A0D\u540E\u5220\u9664\uFF09" };
+      },
+      { deepOnly: true, needsDb: true }
+    ),
+    check(
+      6,
+      "\u8BFB\u56DE\u6821\u9A8C",
+      "database",
+      DOC.probe,
+      async (ctx) => {
+        if (!ctx.probe) return { status: "skip", detail: "\u5199\u63A2\u9488\u672A\u6267\u884C" };
+        if (!ctx.probe.readOk)
+          return {
+            status: "fail",
+            detail: "\u8BFB\u56DE\u5185\u5BB9\u4E0E\u5199\u5165\u4E0D\u4E00\u81F4\uFF0C\u5199\u5165\u4E0D\u53EF\u9760",
+            fix: "\u68C0\u67E5\u6570\u636E\u5E93\u590D\u5236 / \u4E8B\u52A1\u914D\u7F6E"
+          };
+        return { status: "pass", detail: "\u63A2\u9488\u884C\u8BFB\u56DE\u4E00\u81F4" };
+      },
+      { deepOnly: true, needsDb: true }
+    ),
+    check(
+      7,
+      "\u5220\u9664\u6743\u9650",
+      "database",
+      DOC.probe,
+      async (ctx) => {
+        if (!ctx.probe) return { status: "skip", detail: "\u5199\u63A2\u9488\u672A\u6267\u884C" };
+        if (!ctx.probe.deleteOk)
+          return {
+            status: "fail",
+            detail: "\u63A2\u9488\u884C\u5220\u9664\u5931\u8D25\uFF1A\u8D26\u53F7\u65E0\u5199\u6743\u9650\u6216\u53EA\u8BFB",
+            fix: "\u6539\u7528\u5177\u5907\u5199\u6743\u9650\u7684\u6570\u636E\u5E93\u4EE4\u724C"
+          };
+        return { status: "pass", detail: "\u63A2\u9488\u884C\u5DF2\u5220\u9664\uFF0C\u65E0\u6B8B\u7559\u6570\u636E" };
+      },
+      { deepOnly: true, needsDb: true }
+    )
+  ];
+}
+__name(probeChecks, "probeChecks");
+
 // api/_health/version-checks.js
+function scopeDevices(devices, scope) {
+  return scope.deviceId ? devices.filter(
+    (device) => device.deviceId === scope.deviceId || device.deviceId === `client:${scope.deviceId}`
+  ) : devices;
+}
+__name(scopeDevices, "scopeDevices");
+function collectBehind(scoped) {
+  const components = [
+    { key: "panel", name: "Surge \u9762\u677F\u811A\u672C", server: COMPONENT_VERSIONS.panel },
+    { key: "logger", name: "\u6355\u83B7\u811A\u672C\uFF08\u672C\u5730\u526F\u672C\uFF09", server: COMPONENT_VERSIONS.logger },
+    { key: "sgmodule", name: "Surge \u6A21\u5757", server: COMPONENT_VERSIONS.sgmodule }
+  ];
+  const behind = [];
+  for (const component of components) {
+    const expected = component.server;
+    if (!expected) continue;
+    const outdated = [];
+    for (const device of scoped) {
+      const inputs = versionInputsFor(device.deviceType, {
+        panelVersion: device.panelVersion,
+        loggerVersion: device.loggerVersion,
+        platformParams: device.platformParams
+      });
+      if (!inputs) continue;
+      const reported = component.key === "panel" ? inputs.panelVersion : inputs.loggerVersion;
+      if (reported && compareSemver(reported, expected) === -1) {
+        outdated.push(`${device.name || device.ip || device.deviceId}\uFF08${reported}\uFF09`);
+      }
+    }
+    if (outdated.length) {
+      behind.push({
+        component: component.name,
+        expected,
+        outdated: [...new Set(outdated)].slice(0, 5)
+      });
+    }
+  }
+  return { components, behind };
+}
+__name(collectBehind, "collectBehind");
+function distributionMeta() {
+  return {
+    channel: PANEL_ORIGIN ? "pages" : "self-host",
+    origin: PANEL_ORIGIN,
+    note: "Surge \u4E09\u4EF6\u5957\u7ECF Pages \u81EA\u6258\u7BA1\u5206\u53D1\uFF08script-path \u6307\u5411\u8BE5\u6E90\uFF09\uFF0C\u6A21\u5757\u66F4\u65B0\u5373\u6574\u4F53\u5931\u6548"
+  };
+}
+__name(distributionMeta, "distributionMeta");
 function versionChecks(scope) {
   return [
     check(
@@ -5003,50 +5595,8 @@ function versionChecks(scope) {
           deviceType: scope.deviceType,
           username: scope.username
         });
-        const scoped = scope.deviceId ? devices.filter(
-          (device) => device.deviceId === scope.deviceId || device.deviceId === `client:${scope.deviceId}`
-        ) : devices;
-        const components = [
-          { key: "panel", name: "Surge \u9762\u677F\u811A\u672C", server: COMPONENT_VERSIONS.panel },
-          {
-            key: "logger",
-            name: "\u6355\u83B7\u811A\u672C\uFF08\u672C\u5730\u526F\u672C\uFF09",
-            server: COMPONENT_VERSIONS.logger
-          },
-          { key: "sgmodule", name: "Surge \u6A21\u5757", server: COMPONENT_VERSIONS.sgmodule }
-        ];
-        const behind = [];
-        for (const component of components) {
-          const expected = component.server;
-          if (!expected) continue;
-          const outdated = [];
-          for (const device of scoped) {
-            const inputs = versionInputsFor(device.deviceType, {
-              panelVersion: device.panelVersion,
-              loggerVersion: device.loggerVersion,
-              platformParams: device.platformParams
-            });
-            if (!inputs) continue;
-            const reported = component.key === "panel" ? inputs.panelVersion : inputs.loggerVersion;
-            if (reported && compareSemver(reported, expected) === -1) {
-              outdated.push(
-                `${device.name || device.ip || device.deviceId}\uFF08${reported}\uFF09`
-              );
-            }
-          }
-          if (outdated.length) {
-            behind.push({
-              component: component.name,
-              expected,
-              outdated: [...new Set(outdated)].slice(0, 5)
-            });
-          }
-        }
-        const distribution = {
-          channel: PANEL_ORIGIN ? "pages" : "self-host",
-          origin: PANEL_ORIGIN,
-          note: "Surge \u4E09\u4EF6\u5957\u7ECF Pages \u81EA\u6258\u7BA1\u5206\u53D1\uFF08script-path \u6307\u5411\u8BE5\u6E90\uFF09\uFF0C\u6A21\u5757\u66F4\u65B0\u5373\u6574\u4F53\u5931\u6548"
-        };
+        const { components, behind } = collectBehind(scopeDevices(devices, scope));
+        const distribution = distributionMeta();
         if (behind.length) {
           const text = behind.map(
             (item) => `${item.component} \u843D\u540E\uFF08\u670D\u52A1\u7AEF ${item.expected}\uFF09\uFF1A${item.outdated.join("\u3001")}`
@@ -5113,61 +5663,7 @@ function databaseChecks() {
       },
       { needsDb: true }
     ),
-    check(
-      3,
-      "Schema \u4E00\u81F4\u6027",
-      "database",
-      DOC.schema,
-      async (ctx) => {
-        const state = await describeSchemaState(ctx.db, "surge_logs", REQUIRED_LOG_COLUMNS);
-        if (!state.ok)
-          return {
-            status: "fail",
-            detail: state.detail,
-            fix: "\u90E8\u7F72\u540E\u8BBF\u95EE /api/schema \u53D6\u5EFA\u8868\u8BED\u53E5\uFF0C\u6216\u7B49\u5F85\u9996\u6B21\u8BBF\u95EE\u81EA\u52A8\u8FC1\u79FB"
-          };
-        const devices = await describeSchemaState(ctx.db, "devices", [
-          ...REQUIRED_DEVICE_COLUMNS,
-          "device_type"
-        ]);
-        if (!devices.ok)
-          return {
-            status: "fail",
-            detail: devices.detail,
-            fix: "\u9996\u6B21\u8BBF\u95EE\u4EFB\u610F /api \u63A5\u53E3\u4F1A\u81EA\u52A8\u8FC1\u79FB\uFF1B\u4E5F\u53EF\u8BBF\u95EE /api/schema \u53D6\u5EFA\u8868\u8BED\u53E5\u624B\u5DE5\u6267\u884C"
-          };
-        const verdict = await describeSchemaState(ctx.db, "domain_summary", [
-          "domain",
-          "best_action",
-          "direct_votes",
-          "proxy_votes",
-          "reject_votes",
-          "avg_confidence",
-          "last_checked_at",
-          "cooldown_days",
-          "latest_comment",
-          "pinned_comment",
-          "pinned_kind"
-        ]);
-        const queries = await describeSchemaState(ctx.db, "domain_queries", [
-          "domain",
-          "action",
-          "confidence",
-          "model_name",
-          "comment",
-          "kind",
-          "created_at"
-        ]);
-        const verdictOk = verdict.ok && queries.ok;
-        const label = ctx.db.backend === "turso" ? "Turso" : ctx.db.backend === "d1" ? "D1" : "SQLite";
-        return {
-          status: verdictOk ? "pass" : "warn",
-          detail: `${state.detail}\uFF1Bdevices \u6CE8\u518C\u8868\u9F50\u5168\uFF1B${verdictOk ? "AI \u5224\u5B9A\u53CC\u8868\u9F50\u5168" : `AI \u5224\u5B9A\u53CC\u8868\u5F85\u8FC1\u79FB\uFF08${queries.detail}\uFF1B${verdict.detail}\uFF09`}\uFF1BDB_SCHEMA_VERSION = ${DB_SCHEMA_VERSION}\uFF08${label}\uFF09`,
-          fix: verdictOk ? "" : "\u9996\u6B21\u8BBF\u95EE\u4EFB\u610F /api \u63A5\u53E3\u4F1A\u81EA\u52A8\u8FC1\u79FB\uFF1B\u4E5F\u53EF\u8BBF\u95EE /api/schema \u53D6\u5EFA\u8868\u8BED\u53E5\u624B\u5DE5\u6267\u884C"
-        };
-      },
-      { needsDb: true }
-    ),
+    schemaCheck(),
     check(
       4,
       "\u8BFB\u6743\u9650",
@@ -5179,57 +5675,7 @@ function databaseChecks() {
       },
       { needsDb: true }
     ),
-    check(
-      5,
-      "\u5199\u63A2\u9488\uFF08\u5199\u5165\u4E34\u65F6\u884C\uFF09",
-      "database",
-      DOC.probe,
-      async (ctx) => {
-        ctx.probe = await runProbe(ctx.db);
-        if (!ctx.probe.writeOk)
-          return {
-            status: "fail",
-            detail: "\u63A2\u9488\u884C\u672A\u5199\u5165\uFF08\u6743\u9650 / \u914D\u989D / \u9501\u51B2\u7A81\uFF09",
-            fix: "\u68C0\u67E5\u6570\u636E\u5E93\u8D26\u53F7\u7684\u5199\u6743\u9650\u4E0E\u914D\u989D"
-          };
-        return { status: "pass", detail: "health_probe \u5199\u5165\u6210\u529F\uFF08\u540C\u4E00\u4E8B\u52A1\uFF0C\u7A0D\u540E\u5220\u9664\uFF09" };
-      },
-      { deepOnly: true, needsDb: true }
-    ),
-    check(
-      6,
-      "\u8BFB\u56DE\u6821\u9A8C",
-      "database",
-      DOC.probe,
-      async (ctx) => {
-        if (!ctx.probe) return { status: "skip", detail: "\u5199\u63A2\u9488\u672A\u6267\u884C" };
-        if (!ctx.probe.readOk)
-          return {
-            status: "fail",
-            detail: "\u8BFB\u56DE\u5185\u5BB9\u4E0E\u5199\u5165\u4E0D\u4E00\u81F4\uFF0C\u5199\u5165\u4E0D\u53EF\u9760",
-            fix: "\u68C0\u67E5\u6570\u636E\u5E93\u590D\u5236 / \u4E8B\u52A1\u914D\u7F6E"
-          };
-        return { status: "pass", detail: "\u63A2\u9488\u884C\u8BFB\u56DE\u4E00\u81F4" };
-      },
-      { deepOnly: true, needsDb: true }
-    ),
-    check(
-      7,
-      "\u5220\u9664\u6743\u9650",
-      "database",
-      DOC.probe,
-      async (ctx) => {
-        if (!ctx.probe) return { status: "skip", detail: "\u5199\u63A2\u9488\u672A\u6267\u884C" };
-        if (!ctx.probe.deleteOk)
-          return {
-            status: "fail",
-            detail: "\u63A2\u9488\u884C\u5220\u9664\u5931\u8D25\uFF1A\u8D26\u53F7\u65E0\u5199\u6743\u9650\u6216\u53EA\u8BFB",
-            fix: "\u6539\u7528\u5177\u5907\u5199\u6743\u9650\u7684\u6570\u636E\u5E93\u4EE4\u724C"
-          };
-        return { status: "pass", detail: "\u63A2\u9488\u884C\u5DF2\u5220\u9664\uFF0C\u65E0\u6B8B\u7559\u6570\u636E" };
-      },
-      { deepOnly: true, needsDb: true }
-    )
+    ...probeChecks()
   ];
 }
 __name(databaseChecks, "databaseChecks");
@@ -5632,6 +6078,11 @@ var AI_DEFAULT_CONFIG = Object.freeze({
    * 完整替换该组在 action 规则行里的括号说明文本。
    */
   policyMeta: {},
+  /**
+   * 策略分类顺序（T26 #95 / 工单 #95）：组名字符串数组——首页策略条与 hub 左
+   * 列表的分组排序依据；未列出的组按首次出现序殿后。
+   */
+  policyGroupOrder: [],
   enabled: false,
   intervalMinutes: 360,
   batchSize: 10,
@@ -5662,7 +6113,7 @@ var AI_DEFAULT_CONFIG = Object.freeze({
   /** 模型熔断阈值：连续失败 N 次才禁用模型（1 = 首败即熔断，2 容忍偶发抖动） */
   modelFailureThreshold: 2
 });
-var LIMITS = Object.freeze({
+var LIMITS2 = Object.freeze({
   accountId: 64,
   token: 256,
   model: 128,
@@ -5689,7 +6140,7 @@ function normalizeRelayModels(value) {
   const list2 = Array.isArray(value) ? value : String(value ?? "").split(/[,\n，、]/);
   const out = [];
   for (const item of list2) {
-    const name = toText(item, LIMITS.model);
+    const name = toText(item, LIMITS2.model);
     if (name && !out.includes(name)) out.push(name);
     if (out.length >= RELAY_MODELS_MAX) break;
   }
@@ -5707,10 +6158,10 @@ function normalizeAccounts(value, current = []) {
   for (const raw of Array.isArray(value) ? value : []) {
     const type = String(raw?.type ?? "").trim() === RELAY_TYPE ? RELAY_TYPE : CF_TYPE;
     if (type === RELAY_TYPE) {
-      const baseUrl = toText(raw?.baseUrl ?? raw?.id, LIMITS.baseUrl).replace(/\/+$/, "");
+      const baseUrl = toText(raw?.baseUrl ?? raw?.id, LIMITS2.baseUrl).replace(/\/+$/, "");
       if (!/^https:\/\//.test(baseUrl)) continue;
       const prev2 = existing.get(baseUrl) || merged.get(baseUrl) || {};
-      const token2 = toText(raw?.token, LIMITS.token);
+      const token2 = toText(raw?.token, LIMITS2.token);
       const keepOld2 = !token2 || token2.startsWith("\u2022\u2022");
       const models = normalizeRelayModels(raw?.models ?? prev2.models);
       merged.set(baseUrl, {
@@ -5718,21 +6169,21 @@ function normalizeAccounts(value, current = []) {
         type: RELAY_TYPE,
         baseUrl,
         token: keepOld2 ? String(prev2.token ?? "") : token2,
-        label: toText(raw?.label, LIMITS.labelMax),
+        label: toText(raw?.label, LIMITS2.labelMax),
         models
       });
       continue;
     }
-    const id = toText(raw?.id, LIMITS.accountId);
+    const id = toText(raw?.id, LIMITS2.accountId);
     if (!id) continue;
     const prev = existing.get(id) || merged.get(id) || {};
-    const token = toText(raw?.token, LIMITS.token);
+    const token = toText(raw?.token, LIMITS2.token);
     const keepOld = !token || token.startsWith("\u2022\u2022");
     merged.set(id, {
       id,
       type: CF_TYPE,
       token: keepOld ? String(prev.token ?? "") : token,
-      label: toText(raw?.label, LIMITS.labelMax)
+      label: toText(raw?.label, LIMITS2.labelMax)
     });
   }
   return [...merged.values()].filter((entry) => entry.token).slice(0, AI_MAX_ACCOUNTS);
@@ -5755,55 +6206,42 @@ function toText(value, max) {
   return String(value ?? "").trim().slice(0, max);
 }
 __name(toText, "toText");
-function mergeAiConfig(current, patch = {}) {
-  const merged = { ...AI_DEFAULT_CONFIG, ...current };
-  merged.policyMeta = normalizePolicyMeta(merged.policyMeta);
-  if ("policyMeta" in patch) merged.policyMeta = normalizePolicyMeta(patch.policyMeta);
-  let accounts = normalizeAccounts(merged.accounts, merged.accounts);
-  merged.cfAccountId = toText(merged.cfAccountId, LIMITS.accountId);
-  if ("cfAccountId" in patch) merged.cfAccountId = toText(patch.cfAccountId, LIMITS.accountId);
-  if ("model" in patch) merged.model = toText(patch.model, LIMITS.model) || AI_DEFAULT_MODEL;
-  if ("models" in patch) {
-    const models = (Array.isArray(patch.models) ? patch.models : []).map((name) => toText(name, LIMITS.model)).filter(Boolean);
-    merged.models = [...new Set(models)].slice(0, AI_MAX_ACCOUNTS);
-    if (merged.models.length) merged.model = merged.models[0];
-  }
-  if ("cfApiToken" in patch) {
-    const token = toText(patch.cfApiToken, LIMITS.token);
-    if (token && !token.startsWith("\u2022\u2022")) merged.cfApiToken = token;
-  }
-  merged.cfApiToken = toText(merged.cfApiToken, LIMITS.token);
-  if ("prompt" in patch) merged.prompt = sanitizeUserPrompt(toText(patch.prompt, LIMITS.prompt));
+function mergeAccountsList(merged, patch, accounts) {
   if ("accounts" in patch) {
-    accounts = normalizeAccounts(patch.accounts, accounts);
-    const primaryCf = accounts.find((entry) => entry.type !== RELAY_TYPE);
+    const next = normalizeAccounts(patch.accounts, accounts);
+    const primaryCf = next.find((entry) => entry.type !== RELAY_TYPE);
     merged.cfAccountId = primaryCf?.id ?? "";
     merged.cfApiToken = primaryCf?.token ?? "";
-    merged.accounts = accounts.slice(0, AI_MAX_ACCOUNTS);
-  } else if ("cfAccountId" in patch || "cfApiToken" in patch) {
+    merged.accounts = next.slice(0, AI_MAX_ACCOUNTS);
+    return;
+  }
+  if ("cfAccountId" in patch || "cfApiToken" in patch) {
     const id = merged.cfAccountId || accounts[0]?.id || "";
     const token = merged.cfApiToken || accounts[0]?.token || "";
     const label = accounts.find((entry) => entry.id === id)?.label ?? "";
-    accounts = id && token ? [
+    const next = id && token ? [
       { id, type: CF_TYPE, token, label },
       ...accounts.filter((entry) => entry.id !== id)
     ] : accounts.filter((entry) => entry.id !== id);
-    merged.accounts = accounts.slice(0, AI_MAX_ACCOUNTS);
-  } else {
-    const primary = accounts.find(
-      (entry) => entry.id === merged.cfAccountId && entry.type !== RELAY_TYPE
-    );
-    if (primary) {
-      merged.cfApiToken = merged.cfApiToken || primary.token;
-      accounts = [primary, ...accounts.filter((entry) => entry !== primary)];
-    } else if (merged.cfAccountId && merged.cfApiToken) {
-      accounts = [
-        { id: merged.cfAccountId, type: CF_TYPE, token: merged.cfApiToken, label: "" },
-        ...accounts
-      ];
-    }
-    merged.accounts = accounts.slice(0, AI_MAX_ACCOUNTS);
+    merged.accounts = next.slice(0, AI_MAX_ACCOUNTS);
+    return;
   }
+  const primary = accounts.find(
+    (entry) => entry.id === merged.cfAccountId && entry.type !== RELAY_TYPE
+  );
+  if (primary) {
+    merged.cfApiToken = merged.cfApiToken || primary.token;
+    accounts = [primary, ...accounts.filter((entry) => entry !== primary)];
+  } else if (merged.cfAccountId && merged.cfApiToken) {
+    accounts = [
+      { id: merged.cfAccountId, type: CF_TYPE, token: merged.cfApiToken, label: "" },
+      ...accounts
+    ];
+  }
+  merged.accounts = accounts.slice(0, AI_MAX_ACCOUNTS);
+}
+__name(mergeAccountsList, "mergeAccountsList");
+function mergeScalarFields(merged, patch) {
   merged.loadBalance = toBool(patch.loadBalance, merged.loadBalance);
   merged.cooldownBaseMs = toInt(patch.cooldownBaseMs, merged.cooldownBaseMs, 5e3, 12e4);
   merged.cooldownMaxMs = toInt(patch.cooldownMaxMs, merged.cooldownMaxMs, 1e4, 18e5);
@@ -5821,16 +6259,43 @@ function mergeAiConfig(current, patch = {}) {
   merged.intervalMinutes = toInt(
     patch.intervalMinutes,
     merged.intervalMinutes,
-    LIMITS.intervalMin,
-    LIMITS.intervalMax
+    LIMITS2.intervalMin,
+    LIMITS2.intervalMax
   );
-  merged.batchSize = toInt(patch.batchSize, merged.batchSize, LIMITS.batchMin, LIMITS.batchMax);
+  merged.batchSize = toInt(patch.batchSize, merged.batchSize, LIMITS2.batchMin, LIMITS2.batchMax);
   merged.requestDelayMs = toInt(
     patch.requestDelayMs,
     merged.requestDelayMs,
-    LIMITS.delayMin,
-    LIMITS.delayMax
+    LIMITS2.delayMin,
+    LIMITS2.delayMax
   );
+}
+__name(mergeScalarFields, "mergeScalarFields");
+function mergeAiConfig(current, patch = {}) {
+  const merged = { ...AI_DEFAULT_CONFIG, ...current };
+  merged.policyMeta = normalizePolicyMeta(merged.policyMeta);
+  if ("policyMeta" in patch) merged.policyMeta = normalizePolicyMeta(patch.policyMeta);
+  merged.policyGroupOrder = normalizePolicyGroupOrder(merged.policyGroupOrder);
+  if ("policyGroupOrder" in patch) {
+    merged.policyGroupOrder = normalizePolicyGroupOrder(patch.policyGroupOrder);
+  }
+  const accounts = normalizeAccounts(merged.accounts, merged.accounts);
+  merged.cfAccountId = toText(merged.cfAccountId, LIMITS2.accountId);
+  if ("cfAccountId" in patch) merged.cfAccountId = toText(patch.cfAccountId, LIMITS2.accountId);
+  if ("model" in patch) merged.model = toText(patch.model, LIMITS2.model) || AI_DEFAULT_MODEL;
+  if ("models" in patch) {
+    const models = (Array.isArray(patch.models) ? patch.models : []).map((name) => toText(name, LIMITS2.model)).filter(Boolean);
+    merged.models = [...new Set(models)].slice(0, AI_MAX_ACCOUNTS);
+    if (merged.models.length) merged.model = merged.models[0];
+  }
+  if ("cfApiToken" in patch) {
+    const token = toText(patch.cfApiToken, LIMITS2.token);
+    if (token && !token.startsWith("\u2022\u2022")) merged.cfApiToken = token;
+  }
+  merged.cfApiToken = toText(merged.cfApiToken, LIMITS2.token);
+  if ("prompt" in patch) merged.prompt = sanitizeUserPrompt(toText(patch.prompt, LIMITS2.prompt));
+  mergeAccountsList(merged, patch, accounts);
+  mergeScalarFields(merged, patch);
   return merged;
 }
 __name(mergeAiConfig, "mergeAiConfig");
@@ -5845,13 +6310,22 @@ function normalizePolicyMeta(raw) {
     const upper = String(key ?? "").trim().toUpperCase();
     if (!upper) continue;
     const hidden = Boolean(value?.hidden);
-    const prompt = toText(value?.prompt, LIMITS.policyPrompt);
+    const prompt = toText(value?.prompt, LIMITS2.policyPrompt);
     if (!hidden && !prompt) continue;
     out[upper] = { hidden, prompt };
   }
   return out;
 }
 __name(normalizePolicyMeta, "normalizePolicyMeta");
+function normalizePolicyGroupOrder(raw) {
+  if (!Array.isArray(raw)) return [];
+  return [
+    ...new Set(
+      raw.filter((name) => typeof name === "string").map((name) => name.trim()).filter(Boolean).slice(0, 100)
+    )
+  ];
+}
+__name(normalizePolicyGroupOrder, "normalizePolicyGroupOrder");
 
 // api/_ai/config.js
 var AI_CONFIG_USER = "system";
@@ -6643,21 +7117,12 @@ async function callModelWithRuntime(config2, runtime, run2, {
 }
 __name(callModelWithRuntime, "callModelWithRuntime");
 
-// _utils/export-policies.js
+// _utils/export-policy-validate.js
 var BUILTIN_EXPORT_POLICY = "REJECT";
-var DEFAULT_POLICIES = [
-  { policyKey: "REJECT", label: "REJECT", emoji: "", isBuiltin: 1 },
-  { policyKey: "PROXY", label: "PROXY", emoji: "", isBuiltin: 0 },
-  { policyKey: "DIRECT", label: "DIRECT", emoji: "", isBuiltin: 0 }
-];
 var MAX_POLICY_KEY_LENGTH = 32;
-var MAX_LABEL_LENGTH = 32;
-var MAX_EMOJI_LENGTH = 8;
 var MAX_GIST_URL_LENGTH = 512;
 var MAX_SYNC_MINUTES = 1440;
-var MAX_GROUP_NAME_LENGTH = 32;
 var MAX_ICON_LENGTH = 512;
-var POLICY_COLUMNS = "id, policy_key, label, emoji, is_builtin, sort_order, gist_enabled, gist_url, sync_minutes, group_name, icon, created_at, updated_at";
 function validateGistUrl(value) {
   const url = String(value ?? "").trim();
   if (!url) return "";
@@ -6699,6 +7164,18 @@ function validatePolicyKey(value) {
   return "";
 }
 __name(validatePolicyKey, "validatePolicyKey");
+
+// _utils/export-policies.js
+var DEFAULT_POLICIES = [
+  { policyKey: "REJECT", label: "REJECT", emoji: "", isBuiltin: 1 },
+  { policyKey: "PROXY", label: "PROXY", emoji: "", isBuiltin: 0 },
+  { policyKey: "DIRECT", label: "DIRECT", emoji: "", isBuiltin: 0 }
+];
+var MAX_LABEL_LENGTH = 32;
+var MAX_EMOJI_LENGTH = 8;
+var MAX_GROUP_NAME_LENGTH = 32;
+var MAX_ICON_LENGTH2 = 512;
+var POLICY_COLUMNS = "id, policy_key, label, emoji, is_builtin, sort_order, gist_enabled, gist_url, sync_minutes, group_name, icon, created_at, updated_at";
 function sanitizePolicyRow(row) {
   return {
     id: Number(row.id) || 0,
@@ -6836,7 +7313,7 @@ async function updateExportPolicy(db, id, { label, emoji, gistEnabled, gistUrl, 
   if (icon !== void 0) {
     sets.push("icon = ?");
     params.push(
-      String(icon ?? "").trim().slice(0, MAX_ICON_LENGTH)
+      String(icon ?? "").trim().slice(0, MAX_ICON_LENGTH2)
     );
   }
   if (!sets.length) return getExportPolicyById(db, id);
@@ -6920,7 +7397,10 @@ async function saveConfig(context2, db) {
   }
   if (!required.size) required.add("ai.config");
   for (const feature of required) {
-    const denied = await requireFeature(auth.principal, feature, { path: "/api/ai/config" });
+    const denied = await requireFeature(auth.principal, feature, {
+      path: "/api/ai/config",
+      db
+    });
     if (denied) return denied;
   }
   const saved = await saveAiConfig(db, payload);
@@ -7403,6 +7883,64 @@ async function selectDomainsChunked(db, buildSql, keys) {
 __name(selectDomainsChunked, "selectDomainsChunked");
 
 // _utils/logs/verdicts/batch.js
+async function aggregateVotesByDomain(db, keys, aiOnly) {
+  const rows = await selectDomainsChunked(
+    db,
+    (placeholders) => `
+    SELECT q.domain,
+            COALESCE(SUM(CASE WHEN q.action = 'DIRECT' THEN 1 ELSE 0 END), 0) AS d,
+            COALESCE(SUM(CASE WHEN q.action = 'PROXY' THEN 1 ELSE 0 END), 0) AS p,
+            COALESCE(SUM(CASE WHEN q.action = 'REJECT' THEN 1 ELSE 0 END), 0) AS r,
+            COALESCE(AVG(CASE WHEN q.kind = 'ai' THEN q.confidence END), 0) AS avg_conf,
+            (SELECT q2.comment FROM ${DOMAIN_QUERIES_TABLE} q2
+              WHERE q2.domain = q.domain ORDER BY q2.created_at DESC, q2.id DESC LIMIT 1) AS latest_comment,
+            (SELECT q2.action FROM ${DOMAIN_QUERIES_TABLE} q2
+              WHERE q2.domain = q.domain ORDER BY q2.created_at DESC, q2.id DESC LIMIT 1) AS latest_action
+       FROM ${DOMAIN_QUERIES_TABLE} q
+      WHERE q.domain IN (${placeholders})${aiOnly ? " AND q.kind = 'ai'" : ""}
+      GROUP BY q.domain`,
+    keys
+  );
+  return new Map(rows.map((row) => [String(row.domain), row]));
+}
+__name(aggregateVotesByDomain, "aggregateVotesByDomain");
+function summaryFromAggregate(entry, row, config2, kind, checkedAt) {
+  const votes = {
+    direct: Number(row?.d) || 0,
+    proxy: Number(row?.p) || 0,
+    reject: Number(row?.r) || 0
+  };
+  const latest = row ? { action: row.latest_action, comment: row.latest_comment } : null;
+  return buildSummaryRow({
+    domain: entry.domain,
+    votes,
+    avgConfidence: Number(row?.avg_conf) || 0,
+    latest,
+    previous: null,
+    bestAction: bestActionFor(votes, latest?.action ?? entry.action),
+    cooldownDays: cooldownFor(votes, config2?.cooldownDays),
+    comment: entry.comment,
+    kind,
+    checkedAt
+  });
+}
+__name(summaryFromAggregate, "summaryFromAggregate");
+function summaryParams(summary) {
+  return [
+    summary.domain,
+    summary.best_action,
+    summary.direct_votes,
+    summary.proxy_votes,
+    summary.reject_votes,
+    summary.avg_confidence,
+    summary.last_checked_at,
+    summary.cooldown_days,
+    summary.latest_comment,
+    summary.pinned_comment,
+    summary.pinned_kind
+  ];
+}
+__name(summaryParams, "summaryParams");
 async function recordVerdictsBatch(db, entries, { config: config2 = null } = {}) {
   const valid = (Array.isArray(entries) ? entries : []).filter((entry) => entry?.domain && entry?.verdict?.action).map((entry) => ({
     domain: String(entry.domain).trim(),
@@ -7430,46 +7968,20 @@ async function recordVerdictsBatch(db, entries, { config: config2 = null } = {})
       }))
     );
   }
-  const keys = valid.map((entry) => entry.domain);
-  const rows = await selectDomainsChunked(
+  const byDomain = await aggregateVotesByDomain(
     db,
-    (placeholders) => `
-    SELECT q.domain,
-            COALESCE(SUM(CASE WHEN q.action = 'DIRECT' THEN 1 ELSE 0 END), 0) AS d,
-            COALESCE(SUM(CASE WHEN q.action = 'PROXY' THEN 1 ELSE 0 END), 0) AS p,
-            COALESCE(SUM(CASE WHEN q.action = 'REJECT' THEN 1 ELSE 0 END), 0) AS r,
-            COALESCE(AVG(CASE WHEN q.kind = 'ai' THEN q.confidence END), 0) AS avg_conf,
-            (SELECT q2.comment FROM ${DOMAIN_QUERIES_TABLE} q2
-              WHERE q2.domain = q.domain ORDER BY q2.created_at DESC, q2.id DESC LIMIT 1) AS latest_comment,
-            (SELECT q2.action FROM ${DOMAIN_QUERIES_TABLE} q2
-              WHERE q2.domain = q.domain ORDER BY q2.created_at DESC, q2.id DESC LIMIT 1) AS latest_action
-       FROM ${DOMAIN_QUERIES_TABLE} q
-      WHERE q.domain IN (${placeholders})
-      GROUP BY q.domain`,
-    keys
+    valid.map((entry) => entry.domain),
+    false
   );
-  const byDomain = new Map(rows.map((row) => [String(row.domain), row]));
   const summaries = /* @__PURE__ */ new Map();
   const upserts = valid.map((entry) => {
-    const row = byDomain.get(entry.domain);
-    const votes = {
-      direct: Number(row?.d) || 0,
-      proxy: Number(row?.p) || 0,
-      reject: Number(row?.r) || 0
-    };
-    const latest = row ? { action: row.latest_action, comment: row.latest_comment } : null;
-    const summary = buildSummaryRow({
-      domain: entry.domain,
-      votes,
-      avgConfidence: Number(row?.avg_conf) || 0,
-      latest,
-      previous: null,
-      bestAction: bestActionFor(votes, latest?.action ?? entry.action),
-      cooldownDays: cooldownFor(votes, config2?.cooldownDays),
-      comment: entry.comment,
-      kind: "ai",
-      checkedAt: nowIso()
-    });
+    const summary = summaryFromAggregate(
+      entry,
+      byDomain.get(entry.domain),
+      config2,
+      "ai",
+      nowIso()
+    );
     summaries.set(entry.domain, summary);
     return {
       sql: `INSERT INTO ${DOMAIN_SUMMARY_TABLE} (${SUMMARY_COLUMNS})
@@ -7483,19 +7995,7 @@ async function recordVerdictsBatch(db, entries, { config: config2 = null } = {})
               last_checked_at = excluded.last_checked_at,
               cooldown_days = excluded.cooldown_days,
               latest_comment = excluded.latest_comment`,
-      params: [
-        summary.domain,
-        summary.best_action,
-        summary.direct_votes,
-        summary.proxy_votes,
-        summary.reject_votes,
-        summary.avg_confidence,
-        summary.last_checked_at,
-        summary.cooldown_days,
-        summary.latest_comment,
-        summary.pinned_comment,
-        summary.pinned_kind
-      ]
+      params: summaryParams(summary)
     };
   });
   for (let start = 0; start < upserts.length; start += chunkSize) {
@@ -7531,46 +8031,17 @@ async function recordPinnedCommentsBatch(db, entries, { config: config2 = null }
       params: [entry.domain, entry.action, entry.comment, createdAt]
     }))
   );
-  const rows = await selectDomainsChunked(
-    db,
-    (placeholders) => `
-    SELECT domain,
-            COALESCE(SUM(CASE WHEN action = 'DIRECT' THEN 1 ELSE 0 END), 0) AS d,
-            COALESCE(SUM(CASE WHEN action = 'PROXY' THEN 1 ELSE 0 END), 0) AS p,
-            COALESCE(SUM(CASE WHEN action = 'REJECT' THEN 1 ELSE 0 END), 0) AS r,
-            COALESCE(AVG(CASE WHEN kind = 'ai' THEN confidence END), 0) AS avg_conf,
-            (SELECT q2.comment FROM ${DOMAIN_QUERIES_TABLE} q2
-              WHERE q2.domain = q.domain ORDER BY q2.created_at DESC, q2.id DESC LIMIT 1) AS latest_comment,
-            (SELECT q2.action FROM ${DOMAIN_QUERIES_TABLE} q2
-              WHERE q2.domain = q.domain ORDER BY q2.created_at DESC, q2.id DESC LIMIT 1) AS latest_action
-       FROM ${DOMAIN_QUERIES_TABLE}
-      WHERE domain IN (${placeholders}) AND kind = 'ai'
-      GROUP BY domain`,
-    keys
-  );
-  const byDomain = new Map(rows.map((row) => [String(row.domain), row]));
+  const byDomain = await aggregateVotesByDomain(db, keys, true);
   await batchChunked(
     db,
     fresh.map((entry) => {
-      const row = byDomain.get(entry.domain);
-      const votes = {
-        direct: Number(row?.d) || 0,
-        proxy: Number(row?.p) || 0,
-        reject: Number(row?.r) || 0
-      };
-      const latest = row ? { action: row.latest_action, comment: row.latest_comment } : null;
-      const summary = buildSummaryRow({
-        domain: entry.domain,
-        votes,
-        avgConfidence: Number(row?.avg_conf) || 0,
-        latest,
-        previous: null,
-        bestAction: bestActionFor(votes, latest?.action ?? entry.action),
-        cooldownDays: cooldownFor(votes, config2?.cooldownDays),
-        comment: entry.comment,
-        kind: "manual",
-        checkedAt: ""
-      });
+      const summary = summaryFromAggregate(
+        entry,
+        byDomain.get(entry.domain),
+        config2,
+        "manual",
+        ""
+      );
       return {
         sql: `INSERT INTO ${DOMAIN_SUMMARY_TABLE} (${SUMMARY_COLUMNS})
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -7586,19 +8057,7 @@ async function recordPinnedCommentsBatch(db, entries, { config: config2 = null }
               latest_comment = excluded.latest_comment,
               pinned_comment = excluded.pinned_comment,
               pinned_kind = excluded.pinned_kind`,
-        params: [
-          summary.domain,
-          summary.best_action,
-          summary.direct_votes,
-          summary.proxy_votes,
-          summary.reject_votes,
-          summary.avg_confidence,
-          summary.last_checked_at,
-          summary.cooldown_days,
-          summary.latest_comment,
-          summary.pinned_comment,
-          summary.pinned_kind
-        ]
+        params: summaryParams(summary)
       };
     })
   );
@@ -7891,6 +8350,76 @@ async function syncLogsToVerdictBatch(db, domains) {
 __name(syncLogsToVerdictBatch, "syncLogsToVerdictBatch");
 
 // api/_ai/verdict/judge-batch.js
+async function fillFromCache(db, list2, force, results, summary, onResult) {
+  const pending = [];
+  for (const domain2 of list2) {
+    if (!force) {
+      const cached = await getSummary(db, domain2);
+      if (isSummaryFresh(cached)) {
+        results.push({ domain: domain2, source: "cache", summary: cached });
+        summary.cacheHits += 1;
+        onResult?.(results[results.length - 1]);
+        continue;
+      }
+    }
+    pending.push(domain2);
+  }
+  return pending;
+}
+__name(fillFromCache, "fillFromCache");
+function markPending(pending, results, summary, onResult, source, error3, counter) {
+  for (const domain2 of pending) {
+    results.push({ domain: domain2, source, summary: null, error: error3 });
+    onResult?.(results[results.length - 1]);
+  }
+  summary[counter] += pending.length;
+}
+__name(markPending, "markPending");
+async function askModelOnce(db, config2, runtime, pending) {
+  const systemPrompt = await loadVerdictSystemPrompt(db, config2);
+  return callModelWithRuntime(
+    config2,
+    runtime,
+    ({ model, credential }) => runModel(config2, model, buildVerdictMessagesBatch(config2, pending, systemPrompt), {
+      credential,
+      maxTokens: Math.max(400, pending.length * 60),
+      temperature: 0
+    })
+  );
+}
+__name(askModelOnce, "askModelOnce");
+async function persistAndCollect(db, entries, model, config2, summary, results, onResult) {
+  const summaries = await recordVerdictsBatch(db, entries, { config: config2 });
+  const sync = await syncLogsToVerdictBatch(db, [...summaries.keys()]);
+  summary.policyUpdated += sync.policyUpdated;
+  summary.commentFilled += sync.commentFilled;
+  for (const domain2 of [...summaries.keys()]) {
+    results.push({ domain: domain2, source: "ai", summary: summaries.get(domain2) });
+    onResult?.(results[results.length - 1]);
+  }
+}
+__name(persistAndCollect, "persistAndCollect");
+function collectEntries(pending, matched, model, results, summary, onResult) {
+  const entries = [];
+  for (const domain2 of pending) {
+    const verdict = matched.get(domain2);
+    if (!verdict) {
+      results.push({
+        domain: domain2,
+        source: "failed",
+        summary: null,
+        error: "\u6A21\u578B\u672A\u7ED9\u51FA\u8BE5\u5339\u914D\u503C\u7684\u7ED3\u8BBA"
+      });
+      summary.failed += 1;
+      onResult?.(results[results.length - 1]);
+      continue;
+    }
+    summary.aiCalls += 1;
+    entries.push({ domain: domain2, verdict, modelName: model });
+  }
+  return entries;
+}
+__name(collectEntries, "collectEntries");
 async function judgeDomainsBatch(db, config2, domains, { force = false, runtime = null, onResult } = {}) {
   const summary = {
     at: nowIso(),
@@ -7911,101 +8440,51 @@ async function judgeDomainsBatch(db, config2, domains, { force = false, runtime 
     ...new Set((Array.isArray(domains) ? domains : []).map(normalizeDomain).filter(Boolean))
   ];
   summary.attempted = list2.length;
-  const pending = [];
-  for (const domain2 of list2) {
-    if (!force) {
-      const cached = await getSummary(db, domain2);
-      if (isSummaryFresh(cached)) {
-        results.push({ domain: domain2, source: "cache", summary: cached });
-        summary.cacheHits += 1;
-        onResult?.(results[results.length - 1]);
-        continue;
-      }
-    }
-    pending.push(domain2);
-  }
+  const pending = await fillFromCache(db, list2, force, results, summary, onResult);
   if (!pending.length) return { results, summary };
   let outcome;
   try {
-    const systemPrompt = await loadVerdictSystemPrompt(db, config2);
-    outcome = await callModelWithRuntime(
-      config2,
-      runtime,
-      ({ model: model2, credential: credential2 }) => runModel(config2, model2, buildVerdictMessagesBatch(config2, pending, systemPrompt), {
-        credential: credential2,
-        maxTokens: Math.max(400, pending.length * 60),
-        temperature: 0
-      })
-    );
+    outcome = await askModelOnce(db, config2, runtime, pending);
   } catch (error3) {
     if (isQuotaError(error3) && (!runtime || dailyQuotaExhausted(runtime)))
       summary.quotaExceeded = true;
-    for (const domain2 of pending) {
-      results.push({
-        domain: domain2,
-        source: "error",
-        summary: null,
-        error: error3?.message ?? "\u63D0\u95EE\u5931\u8D25"
-      });
-      onResult?.(results[results.length - 1]);
-    }
-    summary.errors += pending.length;
+    markPending(
+      pending,
+      results,
+      summary,
+      onResult,
+      "error",
+      error3?.message ?? "\u63D0\u95EE\u5931\u8D25",
+      "errors"
+    );
     summary.aborted = true;
     return { results, summary };
   }
   if (!outcome.ok) {
-    for (const domain2 of pending) {
-      results.push({
-        domain: domain2,
-        source: "unavailable",
-        summary: null,
-        error: unavailabilityMessage(outcome.unavailable)
-      });
-      onResult?.(results[results.length - 1]);
-    }
-    summary.errors += pending.length;
+    markPending(
+      pending,
+      results,
+      summary,
+      onResult,
+      "unavailable",
+      unavailabilityMessage(outcome.unavailable),
+      "errors"
+    );
     summary.aborted = true;
     return { results, summary };
   }
   const { model, credential, text } = outcome;
   const { matched } = parseVerdictBatchOutput(text, pending);
   if (!matched.size) {
-    for (const domain2 of pending) {
-      results.push({ domain: domain2, source: "failed", summary: null, error: "\u6A21\u578B\u8F93\u51FA\u65E0\u6CD5\u89E3\u6790" });
-      onResult?.(results[results.length - 1]);
-    }
-    summary.failed += pending.length;
+    markPending(pending, results, summary, onResult, "failed", "\u6A21\u578B\u8F93\u51FA\u65E0\u6CD5\u89E3\u6790", "failed");
     return { results, summary };
   }
   if (runtime) {
     recordCredentialSuccess(runtime, credential);
     recordModelSuccess(runtime, model, matched.size);
   }
-  const entries = [];
-  for (const domain2 of pending) {
-    const verdict = matched.get(domain2);
-    if (!verdict) {
-      results.push({
-        domain: domain2,
-        source: "failed",
-        summary: null,
-        error: "\u6A21\u578B\u672A\u7ED9\u51FA\u8BE5\u5339\u914D\u503C\u7684\u7ED3\u8BBA"
-      });
-      summary.failed += 1;
-      onResult?.(results[results.length - 1]);
-      continue;
-    }
-    summary.aiCalls += 1;
-    entries.push({ domain: domain2, verdict, modelName: model });
-  }
-  const summaries = await recordVerdictsBatch(db, entries, { config: config2 });
-  const sync = await syncLogsToVerdictBatch(db, [...summaries.keys()]);
-  summary.policyUpdated += sync.policyUpdated;
-  summary.commentFilled += sync.commentFilled;
-  for (const domain2 of [...summaries.keys()]) {
-    results.push({ domain: domain2, source: "ai", summary: summaries.get(domain2) });
-    onResult?.(results[results.length - 1]);
-  }
+  const entries = collectEntries(pending, matched, model, results, summary, onResult);
+  await persistAndCollect(db, entries, model, config2, summary, results, onResult);
   return { results, summary };
 }
 __name(judgeDomainsBatch, "judgeDomainsBatch");
@@ -8184,8 +8663,7 @@ __name(resetVerdicts, "resetVerdicts");
 
 // api/_ai/executor.js
 var RUNNING_STALE_MS = 15 * 60 * 1e3;
-async function runAiBatch(db, config2, { force = false, runtime = null } = {}) {
-  const state = await loadAiState(db);
+function skipReasonFor(state, config2, force) {
   const runningSince = Date.parse(state.running_since || "");
   if (state.running && Number.isFinite(runningSince) && Date.now() - runningSince < RUNNING_STALE_MS) {
     return { skipped: true, reason: "running" };
@@ -8200,6 +8678,30 @@ async function runAiBatch(db, config2, { force = false, runtime = null } = {}) {
       nextRunAt: new Date(lastFinish + intervalMs).toISOString()
     };
   }
+  return null;
+}
+__name(skipReasonFor, "skipReasonFor");
+function mergeBatchOutcome(summary, outcome) {
+  summary.cacheHits = outcome.summary.cacheHits;
+  summary.aiCalls = outcome.summary.aiCalls;
+  summary.policyUpdated = outcome.summary.policyUpdated;
+  summary.commentFilled = outcome.summary.commentFilled;
+  summary.failed = outcome.summary.failed;
+  summary.errors = outcome.summary.errors;
+  summary.quotaExceeded = outcome.summary.quotaExceeded;
+  summary.aborted = outcome.summary.aborted;
+  if (outcome.results.some((result) => result.source === "unavailable")) {
+    summary.unavailable = true;
+  }
+  if (summary.quotaExceeded) {
+    console.warn("[ai][executor] \u4ECA\u65E5 AI \u989D\u5EA6\u5DF2\u8FBE\u4E0A\u9650\uFF08429\uFF09\uFF0C\u4E2D\u6B62\u672C\u8F6E");
+  }
+}
+__name(mergeBatchOutcome, "mergeBatchOutcome");
+async function runAiBatch(db, config2, { force = false, runtime = null } = {}) {
+  const state = await loadAiState(db);
+  const skip = skipReasonFor(state, config2, force);
+  if (skip) return skip;
   await saveAiState(db, {
     ...state,
     running: true,
@@ -8230,20 +8732,7 @@ async function runAiBatch(db, config2, { force = false, runtime = null } = {}) {
     const domains = items.map((item) => item.key || item.value || item.hostname).filter(Boolean);
     if (!domains.length) return { skipped: false, summary };
     const outcome = await judgeDomainsBatch(db, config2, domains, { runtime });
-    summary.cacheHits = outcome.summary.cacheHits;
-    summary.aiCalls = outcome.summary.aiCalls;
-    summary.policyUpdated = outcome.summary.policyUpdated;
-    summary.commentFilled = outcome.summary.commentFilled;
-    summary.failed = outcome.summary.failed;
-    summary.errors = outcome.summary.errors;
-    summary.quotaExceeded = outcome.summary.quotaExceeded;
-    summary.aborted = outcome.summary.aborted;
-    if (outcome.results.some((result) => result.source === "unavailable")) {
-      summary.unavailable = true;
-    }
-    if (summary.quotaExceeded) {
-      console.warn("[ai][executor] \u4ECA\u65E5 AI \u989D\u5EA6\u5DF2\u8FBE\u4E0A\u9650\uFF08429\uFF09\uFF0C\u4E2D\u6B62\u672C\u8F6E");
-    }
+    mergeBatchOutcome(summary, outcome);
     summary.remaining = Math.max(0, remaining - summary.attempted + summary.errors);
     return { skipped: false, summary };
   } finally {
@@ -8706,6 +9195,17 @@ async function introspectTypeFieldsAny(token, names, endpoint) {
 }
 __name(introspectTypeFieldsAny, "introspectTypeFieldsAny");
 
+// api/_ai/usage/schema-candidates.js
+var SCHEMA_TTL_MS = 30 * 60 * 1e3;
+function datasetNodeCandidates(dataset, accountFields) {
+  const names = [dataset.node];
+  for (const name of accountFields ?? []) {
+    if (dataset.nodePattern.test(String(name)) && !names.includes(name)) names.push(name);
+  }
+  return names;
+}
+__name(datasetNodeCandidates, "datasetNodeCandidates");
+
 // api/_ai/usage/schema-settings.js
 var settingsCache = { at: 0, byAccount: {} };
 function invalidateSettingsCache() {
@@ -8791,17 +9291,8 @@ async function fetchSettingsSnapshot(token, accountTag, names, accountFields, en
 __name(fetchSettingsSnapshot, "fetchSettingsSnapshot");
 
 // api/_ai/usage/schema-probe.js
-var SCHEMA_TTL_MS = 30 * 60 * 1e3;
 var accountFieldsCache = { at: 0, byToken: {} };
 var schemaCache = { at: 0, plans: {} };
-function datasetNodeCandidates(dataset, accountFields) {
-  const names = [dataset.node];
-  for (const name of accountFields ?? []) {
-    if (dataset.nodePattern.test(String(name)) && !names.includes(name)) names.push(name);
-  }
-  return names;
-}
-__name(datasetNodeCandidates, "datasetNodeCandidates");
 async function accountFieldList(token, cfgKey, endpoint) {
   const cached = accountFieldsCache.byToken[cfgKey];
   if (cached && Date.now() - accountFieldsCache.at < SCHEMA_TTL_MS) return cached.promise;
@@ -9251,7 +9742,7 @@ __name(sumAcrossAccounts, "sumAcrossAccounts");
 
 // api/_ai/usage/index.js
 var WINDOW_HOURS = 24;
-var CACHE_TTL_MS = 60 * 1e3;
+var CACHE_TTL_MS2 = 60 * 1e3;
 var WORKERS_DAILY_REQUEST_LIMIT = 1e5;
 var MAX_USAGE_ACCOUNTS = 10;
 var usageCache = { at: 0, key: "", data: null };
@@ -9300,7 +9791,7 @@ async function getCfUsage(config2, { force = false, tzOffsetMinutes = 0 } = {}) 
   if (force) {
     invalidateAllCaches();
   }
-  if (!force && usageCache.key === key && Date.now() - usageCache.at < CACHE_TTL_MS) {
+  if (!force && usageCache.key === key && Date.now() - usageCache.at < CACHE_TTL_MS2) {
     return { ...usageCache.data, cached: true };
   }
   const windows = {
@@ -9501,10 +9992,10 @@ __name(onRequest2, "onRequest");
 var PANEL_CONFIG_USER = "system";
 var PANEL_CONFIG_KEY = "panel.config";
 var PANEL_DEFAULT_CONFIG = Object.freeze({ recordSourceIp: true });
-var CACHE_TTL_MS2 = 15 * 1e3;
-var cache2 = null;
+var CACHE_TTL_MS3 = 15 * 1e3;
+var cache3 = null;
 function invalidatePanelConfigCache() {
-  cache2 = null;
+  cache3 = null;
 }
 __name(invalidatePanelConfigCache, "invalidatePanelConfigCache");
 function toBool2(value, fallback) {
@@ -9528,7 +10019,7 @@ function parsePanelConfig(raw) {
 }
 __name(parsePanelConfig, "parsePanelConfig");
 async function readPanelConfig(db) {
-  if (cache2 && Date.now() - cache2.at < CACHE_TTL_MS2) return cache2.value;
+  if (cache3 && Date.now() - cache3.at < CACHE_TTL_MS3) return cache3.value;
   let value = PANEL_DEFAULT_CONFIG;
   try {
     const rows = await db.execute(
@@ -9538,7 +10029,7 @@ async function readPanelConfig(db) {
     value = parsePanelConfig(rows[0]?.setting_value);
   } catch {
   }
-  cache2 = { value, at: Date.now() };
+  cache3 = { value, at: Date.now() };
   return value;
 }
 __name(readPanelConfig, "readPanelConfig");
@@ -9563,6 +10054,7 @@ __name(writePanelConfig, "writePanelConfig");
 
 // _utils/api-constants.js
 var CACHE_OK = { "Cache-Control": "public, max-age=30" };
+var CACHE_PRIVATE = { "Cache-Control": "private, max-age=30" };
 var NO_CACHE = { "Cache-Control": "no-store" };
 function normalizePath(path) {
   if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
@@ -9657,7 +10149,17 @@ __name(handleHeartbeat, "handleHeartbeat");
 
 // api/_auth/routes.js
 function loginResponse(token, expiresAt, user) {
-  return jsonResponse({ success: true, data: { token, expiresAt, user } }, { headers: NO_CACHE });
+  return jsonResponse(
+    {
+      success: true,
+      data: {
+        token,
+        expiresAt,
+        user
+      }
+    },
+    { headers: NO_CACHE }
+  );
 }
 __name(loginResponse, "loginResponse");
 async function handleBootstrap(context2, db) {
@@ -9693,11 +10195,18 @@ async function handleBootstrap(context2, db) {
     throw error3;
   }
   invalidateAuthStateCache();
-  await ensureBuiltinTestUser(db).catch(() => {
-  });
   const session = await createSession(db, user.id, {
     userAgent: context2.request.headers.get("user-agent") ?? ""
   });
+  await recordAudit(
+    db,
+    null,
+    "admin.bootstrap",
+    "user",
+    user.id,
+    user.username,
+    "\u5F15\u5BFC\u521B\u5EFA\u9996\u4F4D\u8D85\u7EA7\u7BA1\u7406\u5458"
+  );
   return loginResponse(session.token, session.expiresAt, user);
 }
 __name(handleBootstrap, "handleBootstrap");
@@ -9729,6 +10238,9 @@ async function handleLogin(context2, db) {
   if (!row) return unauthorized("\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF");
   const passwordOk = await verifyPassword(password, row.password_hash);
   if (!passwordOk) return unauthorized("\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF");
+  if (passwordOk && isLegacyBuiltinCredential(row, password)) {
+    return unauthorized("\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF");
+  }
   if (String(row.status ?? "active") !== "active") {
     return jsonResponse(
       { success: false, error: "\u8D26\u53F7\u5DF2\u88AB\u7981\u7528\uFF1A\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458" },
@@ -9763,7 +10275,7 @@ async function handleMe(context2, db) {
   const principal = await resolvePrincipal(context2.env, db, context2.request, token, context2);
   const authEnabled = await isAuthEnabled(db);
   const [featureAccess, systemConfig] = await Promise.all([
-    evaluateAllFeatures(principal),
+    evaluateAllFeatures(principal, { db }),
     readPanelConfig(db)
   ]);
   const data = {
@@ -10799,68 +11311,7 @@ function hostInCidr(hostText, target) {
 }
 __name(hostInCidr, "hostInCidr");
 
-// _utils/logs/admin.js
-async function deleteLog(db, hostname) {
-  const target = String(hostname || "").trim();
-  if (!target) return 0;
-  const results = await db.batch([
-    { sql: `DELETE FROM ${LOGS_TABLE} WHERE hostname = ?`, params: [target] }
-  ]);
-  await deleteOverride(db, target);
-  return results[0].changes;
-}
-__name(deleteLog, "deleteLog");
-async function clearAllLogs(db) {
-  const results = await db.batch([
-    { sql: `DELETE FROM ${LOGS_TABLE}` },
-    { sql: `DELETE FROM sqlite_sequence WHERE name = ?`, params: [LOGS_TABLE] },
-    { sql: `DELETE FROM rule_overrides` }
-  ]);
-  return results[0].changes;
-}
-__name(clearAllLogs, "clearAllLogs");
-async function clearEmptyCommentLogs(db) {
-  const results = await db.batch([
-    {
-      sql: `DELETE FROM ${LOGS_TABLE} AS s
-             WHERE NOT EXISTS (
-               SELECT 1 FROM rule_overrides ro
-                WHERE ro.hostname = s.hostname AND TRIM(COALESCE(ro.comment, '')) != ''
-             )
-               AND NOT EXISTS (
-               SELECT 1 FROM domain_summary d
-                WHERE d.domain = s.match_key
-                  AND (TRIM(COALESCE(d.latest_comment, '')) != ''
-                    OR TRIM(COALESCE(d.pinned_comment, '')) != '')
-             )`
-    },
-    // 孤儿覆盖行清理：规则行已删但覆盖行还在（历史版本遗留），一并回收
-    {
-      sql: `DELETE FROM rule_overrides
-             WHERE NOT EXISTS (SELECT 1 FROM ${LOGS_TABLE} s WHERE s.hostname = rule_overrides.hostname)`
-    }
-  ]);
-  return results[0].changes;
-}
-__name(clearEmptyCommentLogs, "clearEmptyCommentLogs");
-async function clearPresetCommentPins(db) {
-  return clearPresetPins(db);
-}
-__name(clearPresetCommentPins, "clearPresetCommentPins");
-async function clearAllCommentPins(db) {
-  const results = await db.batch([
-    {
-      sql: `UPDATE domain_summary SET pinned_comment = '', pinned_kind = '' WHERE TRIM(COALESCE(pinned_comment, '')) != ''`,
-      params: []
-    },
-    {
-      sql: `UPDATE rule_overrides SET comment = '' WHERE TRIM(COALESCE(comment, '')) != ''`,
-      params: []
-    }
-  ]);
-  return results.reduce((total, result) => total + (Number(result?.changes) || 0), 0);
-}
-__name(clearAllCommentPins, "clearAllCommentPins");
+// _utils/logs/reduce-exclude.js
 function legacyV4PrefixCidr(key) {
   const parts = key.split(".");
   if (parts.length !== 3 || !parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255))
@@ -10947,28 +11398,7 @@ async function reduceDomainExclude(db, { insertTarget, type, value, policy, wher
   };
 }
 __name(reduceDomainExclude, "reduceDomainExclude");
-async function reduceExclude(db, targetKey, { policy = "PROXY", source = "" } = {}) {
-  const key = String(targetKey || "").trim();
-  const validPolicy = normalizeRulePolicy(policy);
-  if (!key) return { deleted: 0, created: false };
-  const parsed = parseIpTarget(key);
-  const legacyCidr = parsed ? null : legacyV4PrefixCidr(key);
-  const targetIp = parsed || (legacyCidr ? parseIpTarget(legacyCidr) : null);
-  const insertTarget = targetIp ? parsed && key.includes("/") ? key : targetIp.cidr : key;
-  const type = inferHostType(insertTarget);
-  const value = insertTarget;
-  if (!targetIp) {
-    const where = key.includes(":") ? { sql: `hostname LIKE ?`, params: [`${key}%`] } : { sql: `hostname = ? OR hostname LIKE ?`, params: [key, `%.${key}`] };
-    return reduceDomainExclude(db, {
-      insertTarget,
-      type,
-      value,
-      policy: validPolicy,
-      where,
-      whereParams: where.params,
-      fallbackSource: source
-    });
-  }
+async function reduceIpExclude(db, { insertTarget, type, value, policy, targetIp, source }) {
   const rows = await db.execute(`SELECT hostname, count, source FROM ${LOGS_TABLE}`);
   const victimRows = rows.map((row) => ({
     hostname: String(row.hostname ?? "").trim(),
@@ -11012,12 +11442,107 @@ async function reduceExclude(db, targetKey, { policy = "PROXY", source = "" } = 
       }
     });
   }
-  await upsertOverride(db, insertTarget, { policy: validPolicy, comment: null });
+  await upsertOverride(db, insertTarget, { policy, comment: null });
   return { deleted, created };
+}
+__name(reduceIpExclude, "reduceIpExclude");
+async function reduceExclude(db, targetKey, { policy = "PROXY", source = "" } = {}) {
+  const key = String(targetKey || "").trim();
+  const validPolicy = normalizeRulePolicy(policy);
+  if (!key) return { deleted: 0, created: false };
+  const parsed = parseIpTarget(key);
+  const legacyCidr = parsed ? null : legacyV4PrefixCidr(key);
+  const targetIp = parsed || (legacyCidr ? parseIpTarget(legacyCidr) : null);
+  const insertTarget = targetIp ? parsed && key.includes("/") ? key : targetIp.cidr : key;
+  const type = inferHostType(insertTarget);
+  const value = insertTarget;
+  if (!targetIp) {
+    const where = key.includes(":") ? { sql: `hostname LIKE ?`, params: [`${key}%`] } : { sql: `hostname = ? OR hostname LIKE ?`, params: [key, `%.${key}`] };
+    return reduceDomainExclude(db, {
+      insertTarget,
+      type,
+      value,
+      policy: validPolicy,
+      where,
+      whereParams: where.params,
+      fallbackSource: source
+    });
+  }
+  return reduceIpExclude(db, {
+    insertTarget,
+    type,
+    value,
+    policy: validPolicy,
+    targetIp,
+    source
+  });
 }
 __name(reduceExclude, "reduceExclude");
 
-// _utils/logs/batch.js
+// _utils/logs/admin.js
+async function deleteLog(db, hostname) {
+  const target = String(hostname || "").trim();
+  if (!target) return 0;
+  const results = await db.batch([
+    { sql: `DELETE FROM ${LOGS_TABLE} WHERE hostname = ?`, params: [target] }
+  ]);
+  await deleteOverride(db, target);
+  return results[0].changes;
+}
+__name(deleteLog, "deleteLog");
+async function clearAllLogs(db) {
+  const results = await db.batch([
+    { sql: `DELETE FROM ${LOGS_TABLE}` },
+    { sql: `DELETE FROM sqlite_sequence WHERE name = ?`, params: [LOGS_TABLE] },
+    { sql: `DELETE FROM rule_overrides` }
+  ]);
+  return results[0].changes;
+}
+__name(clearAllLogs, "clearAllLogs");
+async function clearEmptyCommentLogs(db) {
+  const results = await db.batch([
+    {
+      sql: `DELETE FROM ${LOGS_TABLE} AS s
+             WHERE NOT EXISTS (
+               SELECT 1 FROM rule_overrides ro
+                WHERE ro.hostname = s.hostname AND TRIM(COALESCE(ro.comment, '')) != ''
+             )
+               AND NOT EXISTS (
+               SELECT 1 FROM domain_summary d
+                WHERE d.domain = s.match_key
+                  AND (TRIM(COALESCE(d.latest_comment, '')) != ''
+                    OR TRIM(COALESCE(d.pinned_comment, '')) != '')
+             )`
+    },
+    // 孤儿覆盖行清理：规则行已删但覆盖行还在（历史版本遗留），一并回收
+    {
+      sql: `DELETE FROM rule_overrides
+             WHERE NOT EXISTS (SELECT 1 FROM ${LOGS_TABLE} s WHERE s.hostname = rule_overrides.hostname)`
+    }
+  ]);
+  return results[0].changes;
+}
+__name(clearEmptyCommentLogs, "clearEmptyCommentLogs");
+async function clearPresetCommentPins(db) {
+  return clearPresetPins(db);
+}
+__name(clearPresetCommentPins, "clearPresetCommentPins");
+async function clearAllCommentPins(db) {
+  const results = await db.batch([
+    {
+      sql: `UPDATE domain_summary SET pinned_comment = '', pinned_kind = '' WHERE TRIM(COALESCE(pinned_comment, '')) != ''`,
+      params: []
+    },
+    {
+      sql: `UPDATE rule_overrides SET comment = '' WHERE TRIM(COALESCE(comment, '')) != ''`,
+      params: []
+    }
+  ]);
+  return results.reduce((total, result) => total + (Number(result?.changes) || 0), 0);
+}
+__name(clearAllCommentPins, "clearAllCommentPins");
+
+// _utils/logs/batch-parse.js
 function parseOverrideLine(line) {
   const parsed = parseRuleLine(line);
   if (!parsed || parsed.invalid) return null;
@@ -11078,6 +11603,8 @@ function normalizeOverrideInput(entry) {
   };
 }
 __name(normalizeOverrideInput, "normalizeOverrideInput");
+
+// _utils/logs/batch.js
 async function preserveEditedRow(db, items, preserveKey) {
   const head = items[0];
   if (!head || head.hostname === preserveKey) return false;
@@ -11552,14 +12079,60 @@ function blockedIPv4Reason(octets) {
   return hit ? hit.reason : "";
 }
 __name(blockedIPv4Reason, "blockedIPv4Reason");
+function parseIPv6Groups(text) {
+  let head = text;
+  let tail = null;
+  const compressed = text.indexOf("::");
+  if (compressed !== -1) {
+    if (text.includes("::", compressed + 1)) return null;
+    head = text.slice(0, compressed);
+    tail = text.slice(compressed + 2);
+  }
+  const parseGroups = /* @__PURE__ */ __name((part) => {
+    if (part === "") return [];
+    const pieces = part.split(":");
+    const groups = [];
+    for (let i = 0; i < pieces.length; i += 1) {
+      const piece = pieces[i];
+      if (piece.includes(".")) {
+        if (i !== pieces.length - 1) return null;
+        const dotted = piece.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+        if (!dotted) return null;
+        const octets = dotted.slice(1).map(Number);
+        if (octets.some((n) => n > 255)) return null;
+        groups.push(octets[0] << 8 | octets[1], octets[2] << 8 | octets[3]);
+        continue;
+      }
+      if (!/^[0-9a-f]{1,4}$/.test(piece)) return null;
+      groups.push(parseInt(piece, 16));
+    }
+    return groups;
+  }, "parseGroups");
+  const headGroups = parseGroups(head);
+  const tailGroups = tail === null ? [] : parseGroups(tail);
+  if (!headGroups || !tailGroups) return null;
+  if (tail === null && headGroups.length !== 8) return null;
+  if (tail !== null && headGroups.length + tailGroups.length > 7) return null;
+  const zeros = new Array(8 - headGroups.length - tailGroups.length).fill(0);
+  return [...headGroups, ...zeros, ...tailGroups];
+}
+__name(parseIPv6Groups, "parseIPv6Groups");
 function blockedIPv6Reason(host) {
-  const text = host.toLowerCase().replace(/^\[|\]$/g, "");
-  if (text === "::1") return "IPv6 \u73AF\u56DE\u5730\u5740";
-  if (text === "::") return "IPv6 \u672A\u6307\u5B9A\u5730\u5740";
-  if (/^f[cd][0-9a-f]{2}:/.test(text)) return "fc00::/7 \u552F\u4E00\u672C\u5730\u5730\u5740";
-  if (/^fe[89ab][0-9a-f]:/.test(text)) return "fe80::/10 \u94FE\u8DEF\u672C\u5730\u5730\u5740";
-  const mapped = text.match(/^::ffff:(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
-  if (mapped) return blockedIPv4Reason(mapped.slice(1).map(Number));
+  const groups = parseIPv6Groups(host.toLowerCase().replace(/^\[|\]$/g, ""));
+  if (!groups) return "";
+  if (groups.every((g) => g === 0)) return "IPv6 \u672A\u6307\u5B9A\u5730\u5740";
+  if (groups[7] === 1 && groups.slice(0, 7).every((g) => g === 0)) return "IPv6 \u73AF\u56DE\u5730\u5740";
+  if ((groups[0] & 65024) === 64512) return "fc00::/7 \u552F\u4E00\u672C\u5730\u5730\u5740";
+  if ((groups[0] & 65472) === 65152) return "fe80::/10 \u94FE\u8DEF\u672C\u5730\u5730\u5740";
+  let embedded = null;
+  if (groups[5] === 65535 && groups.slice(0, 5).every((g) => g === 0)) {
+    embedded = [groups[6] >> 8, groups[6] & 255, groups[7] >> 8, groups[7] & 255];
+  } else if (groups[0] === 100 && groups[1] === 65435 && groups.slice(2, 6).every((g) => g === 0)) {
+    embedded = [groups[6] >> 8, groups[6] & 255, groups[7] >> 8, groups[7] & 255];
+  } else if (groups[0] === 8194) {
+    embedded = [groups[1] >> 8, groups[1] & 255, groups[2] >> 8, groups[2] & 255];
+  }
+  if (embedded) return blockedIPv4Reason(embedded);
   return "";
 }
 __name(blockedIPv6Reason, "blockedIPv6Reason");
@@ -11596,12 +12169,12 @@ __name(checkSubscriptionUrl, "checkSubscriptionUrl");
 
 // api/_subscribe/cache.js
 var MAX_CACHE_ENTRIES = 200;
-var CACHE_TTL_MS3 = 5 * 60 * 1e3;
+var CACHE_TTL_MS4 = 5 * 60 * 1e3;
 var parseCache = /* @__PURE__ */ new Map();
 function readCache(url) {
   const hit = parseCache.get(url);
   if (!hit) return null;
-  if (Date.now() - hit.at > CACHE_TTL_MS3) {
+  if (Date.now() - hit.at > CACHE_TTL_MS4) {
     parseCache.delete(url);
     return null;
   }
@@ -11620,11 +12193,6 @@ function writeCache(url, value) {
 __name(writeCache, "writeCache");
 
 // api/_subscribe/extract.js
-var FETCH_TIMEOUT_MS = 8e3;
-var FETCH_MAX_ATTEMPTS = 3;
-var FETCH_RETRY_BASE_DELAY_MS = 300;
-var FETCH_MAX_TOTAL_MS = 3e4;
-var MAX_BODY_BYTES = 2 * 1024 * 1024;
 var MAX_RULE_LINES = 5e4;
 var SECTION_HEADER = /^\s*\[.*\]\s*$/;
 var CONFIG_LINE = /^\s*[A-Za-z0-9_.-]+\s*=/;
@@ -11723,27 +12291,6 @@ function decodeBase64(text) {
   }
 }
 __name(decodeBase64, "decodeBase64");
-async function readBody(response) {
-  if (!response.ok) {
-    return { ok: false, error: `\u8BA2\u9605\u6E90\u8FD4\u56DE HTTP ${response.status}`, status: response.status };
-  }
-  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
-  if (contentType.includes("text/html")) {
-    return { ok: false, error: "\u8FD4\u56DE\u7684\u662F\u7F51\u9875\u800C\u4E0D\u662F\u89C4\u5219\u5185\u5BB9\uFF08content-type \u4E3A text/html\uFF09" };
-  }
-  let text;
-  try {
-    text = await response.text();
-  } catch (error3) {
-    return { ok: false, error: `\u8BFB\u53D6\u5185\u5BB9\u5931\u8D25\uFF1A${error3?.message || "\u672A\u77E5\u539F\u56E0"}` };
-  }
-  if (!text.trim()) return { ok: false, error: "\u8BA2\u9605\u5185\u5BB9\u4E3A\u7A7A" };
-  if (text.length > MAX_BODY_BYTES) {
-    return { ok: false, error: `\u8BA2\u9605\u5185\u5BB9\u8D85\u8FC7 ${MAX_BODY_BYTES / 1024 / 1024}MB \u4E0A\u9650` };
-  }
-  return { ok: true, text };
-}
-__name(readBody, "readBody");
 function retryAsBase64(text, first, filter = null) {
   const extractionRate = first.total > 0 ? first.lines.length / first.total : 0;
   const looksBase64 = BASE64_LIKE.test(text) && text.replace(/\s/g, "").length % 4 === 0;
@@ -11756,88 +12303,9 @@ function retryAsBase64(text, first, filter = null) {
   return second.lines.length > 0 ? { ok: true, ...second, truncated: second.lines.length >= MAX_RULE_LINES } : null;
 }
 __name(retryAsBase64, "retryAsBase64");
-function redactUrlForLog(url) {
-  try {
-    const parsed = new URL(url);
-    parsed.username = "";
-    parsed.password = "";
-    parsed.search = "";
-    return `${parsed.origin}${parsed.pathname}`;
-  } catch {
-    return "<invalid-url>";
-  }
-}
-__name(redactUrlForLog, "redactUrlForLog");
-var MAX_REDIRECTS = 5;
-function mockOutbound(url, env2) {
-  const base = String(env2?.SUBSCRIBE_MOCK_UPSTREAM ?? "").trim();
-  if (!base) return url;
-  return `${base}?mock_url=${encodeURIComponent(url)}`;
-}
-__name(mockOutbound, "mockOutbound");
-async function fetchWithGuardedRedirects(initialUrl, env2 = null) {
-  let url = initialUrl;
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    const checked = checkSubscriptionUrl(url);
-    if (checked.error) return { error: checked.error, status: 400 };
-    const response = await fetchWithRetry(
-      mockOutbound(checked.url, env2),
-      { redirect: "manual" },
-      {
-        timeoutMs: FETCH_TIMEOUT_MS,
-        maxAttempts: FETCH_MAX_ATTEMPTS,
-        baseDelayMs: FETCH_RETRY_BASE_DELAY_MS,
-        totalBudgetMs: FETCH_MAX_TOTAL_MS,
-        onRetry: /* @__PURE__ */ __name((info3) => console.warn("[subscribe][fetch] \u53EF\u91CD\u8BD5\uFF0C\u51C6\u5907\u91CD\u8BD5", {
-          ...info3,
-          host: redactUrlForLog(checked.url)
-        }), "onRetry")
-      }
-    ).catch((error3) => error3);
-    if (response instanceof Error) {
-      if (response?.name === "TimeoutError" || response?.name === "AbortError") {
-        return {
-          error: `\u6293\u53D6\u8D85\u65F6\uFF08\u8D85\u8FC7 ${FETCH_TIMEOUT_MS / 1e3} \u79D2\u65E0\u54CD\u5E94\uFF09`,
-          status: 504
-        };
-      }
-      return { error: `\u6293\u53D6\u5931\u8D25\uFF1A${response?.message || "\u7F51\u7EDC\u4E0D\u53EF\u8FBE"}`, status: 0 };
-    }
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location)
-        return {
-          error: `\u8BA2\u9605\u6E90\u8FD4\u56DE ${response.status} \u91CD\u5B9A\u5411\u4F46\u6CA1\u6709 Location`,
-          status: 502
-        };
-      url = new URL(location, checked.url).toString();
-      continue;
-    }
-    return { response };
-  }
-  return { error: `\u91CD\u5B9A\u5411\u8D85\u8FC7 ${MAX_REDIRECTS} \u8DF3\uFF0C\u5DF2\u4E2D\u6B62`, status: 508 };
-}
-__name(fetchWithGuardedRedirects, "fetchWithGuardedRedirects");
-async function fetchAndExtract(url, env2 = null, filter = null) {
-  const outcome = await fetchWithGuardedRedirects(url, env2);
-  if (outcome.error) {
-    return { ok: false, error: outcome.error, status: outcome.status ?? 0 };
-  }
-  const response = outcome.response;
-  const gate = await readBody(response);
-  if (!gate.ok) return gate;
-  const first = extractRuleLines(gate.text, filter);
-  const decoded = retryAsBase64(gate.text, first, filter);
-  if (decoded) return decoded;
-  if (first.lines.length === 0) {
-    return { ok: false, error: "\u6CA1\u6709\u4ECE\u5185\u5BB9\u91CC\u8BC6\u522B\u51FA\u4EFB\u4F55\u89C4\u5219\uFF08\u53EF\u80FD\u4E0D\u662F\u89C4\u5219\u8BA2\u9605\uFF09" };
-  }
-  return { ok: true, ...first, truncated: first.lines.length >= MAX_RULE_LINES };
-}
-__name(fetchAndExtract, "fetchAndExtract");
 
 // api/_logger/subscription-merge.js
-var FETCH_TIMEOUT_MS2 = 6e3;
+var FETCH_TIMEOUT_MS = 6e3;
 var MAX_MERGE_SUBSCRIPTIONS = 5;
 function lineKey(type, value) {
   return `${String(type || "").toUpperCase()}|${String(value || "").trim().toLowerCase()}`;
@@ -11847,7 +12315,7 @@ async function loadSubscriptionLines(url) {
   const cached = readCache(url);
   if (cached?.ok && Array.isArray(cached.lines)) return cached.lines;
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS2) });
+    const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!response.ok) return null;
     const contentType = String(response.headers.get("content-type") || "").toLowerCase();
     if (contentType.includes("text/html")) return null;
@@ -12360,7 +12828,7 @@ async function keyGuard(context2, db, id) {
       )
     };
   }
-  const featureDenied = await requireFeature(principal, "users.manage");
+  const featureDenied = await requireFeature(principal, "users.manage", { db });
   if (featureDenied) return { ok: false, response: featureDenied };
   return { ok: true, principal };
 }
@@ -12624,7 +13092,7 @@ __name(handleListUserPresence, "handleListUserPresence");
 async function handleListUsers(context2, db) {
   const gate = await guard2(context2, db);
   if (!gate.ok) return gate.response;
-  await ensureBuiltinTestUser(db);
+  const seededTestAccount = await ensureBuiltinTestUser(db);
   const [users, groups, memberCounts] = await Promise.all([
     listUsers(db),
     listGroups(db),
@@ -12635,7 +13103,14 @@ async function handleListUsers(context2, db) {
     memberCount: memberCounts.get(group3.id) || 0
   }));
   return jsonResponse(
-    { success: true, data: { users, groups: withCounts } },
+    {
+      success: true,
+      data: {
+        users,
+        groups: withCounts,
+        ...seededTestAccount ? { testAccount: seededTestAccount } : {}
+      }
+    },
     { headers: NO_CACHE }
   );
 }
@@ -12652,7 +13127,7 @@ async function handleCreateUser(context2, db) {
   if (roleError) return badRequest(roleError);
   const duplicate = await getUserByUsername(db, username);
   if (duplicate) return badRequest(`\u8D26\u53F7\u5DF2\u5B58\u5728\uFF1A${username}`);
-  const adminSlot = role === "admin" ? await singleAdminViolation(db, "add") : null;
+  const adminSlot = isActiveAdmin(role, "active") ? await singleAdminViolation(db, "add") : null;
   if (adminSlot) return badRequest(`${adminSlot}\uFF0C\u8BF7\u6539\u7528\u666E\u901A\u7528\u6237\u6216\u81EA\u5B9A\u4E49\u89D2\u8272`);
   const effectiveUid = !uid ? username : uid;
   const uidConflict = await ensureUidAvailable(db, effectiveUid);
@@ -12679,6 +13154,15 @@ async function handleCreateUser(context2, db) {
     preview: userKeyPreview(userKey)
   });
   invalidateAuthStateCache();
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.create",
+    "user",
+    user.id,
+    user.username,
+    `role=${user.role}`
+  );
   return jsonResponse(
     { success: true, data: { ...user, userKey } },
     { status: 201, headers: NO_CACHE }
@@ -12703,8 +13187,8 @@ async function handlePatchUser(context2, db, id) {
   const usernameChanged = Boolean(requestedUsername) && requestedUsername !== String(row.username ?? "");
   const roleError = await validateRoleValue(db, role ?? row.role);
   if (roleError) return badRequest(roleError);
-  const wasAdmin = row.role === "admin" && row.status === "active";
-  const willBeAdmin = (role ?? row.role) === "admin" && (status4 ?? row.status) === "active";
+  const wasAdmin = isActiveAdmin(row.role, row.status);
+  const willBeAdmin = isActiveAdmin(role ?? row.role, status4 ?? row.status);
   if (wasAdmin && !willBeAdmin) {
     const lastAdmin = await singleAdminViolation(db, "remove", "\u505C\u7528");
     if (lastAdmin) return badRequest(lastAdmin);
@@ -12746,6 +13230,15 @@ async function handlePatchUser(context2, db, id) {
     await deleteUserChannels(db, id).catch(() => {
     });
   }
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.update",
+    "user",
+    user.id,
+    user.username,
+    `\u53D8\u66F4:${Object.keys(patch).join(", ") || "\u65E0"}`
+  );
   return jsonResponse({ success: true, data: user }, { headers: NO_CACHE });
 }
 __name(handlePatchUser, "handlePatchUser");
@@ -12762,49 +13255,57 @@ async function handleDeleteUser(context2, db, id) {
   if (gate.principal.type === "user" && Number(gate.principal.user.id) === Number(id)) {
     return badRequest("\u4E0D\u80FD\u5220\u9664\u5F53\u524D\u767B\u5F55\u7684\u8D26\u53F7");
   }
-  if (row.role === "admin" && row.status === "active") {
+  if (isActiveAdmin(row.role, row.status)) {
     const lastAdmin = await singleAdminViolation(db, "remove", "\u5220\u9664");
     if (lastAdmin) return badRequest(lastAdmin);
   }
   await deleteUser(db, id);
   invalidateAuthStateCache();
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.delete",
+    "user",
+    id,
+    row.username,
+    `role=${row.role} status=${row.status}`
+  );
   return jsonResponse({ success: true, data: { deleted: Number(id) } }, { headers: NO_CACHE });
 }
 __name(handleDeleteUser, "handleDeleteUser");
 
 // api/_users/users-batch.js
 var BATCH_MAX_USERS = 50;
-async function handleBatchCreateUsers(context2, db) {
-  const gate = await guard2(context2, db);
-  if (!gate.ok) return gate.response;
-  const parsed = await readJson(context2);
-  if (!parsed.ok) return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
-  const body = parsed.value ?? {};
+async function validateBatchInput(db, body) {
   const count3 = Math.floor(Number(body.count));
-  if (!Number.isFinite(count3) || count3 < 1) return badRequest("count \u5FC5\u987B\u662F \u2265 1 \u7684\u6574\u6570");
-  if (count3 > BATCH_MAX_USERS) return badRequest(`\u5355\u6B21\u6700\u591A\u521B\u5EFA ${BATCH_MAX_USERS} \u4E2A\u7528\u6237`);
+  if (!Number.isFinite(count3) || count3 < 1) return { error: "count \u5FC5\u987B\u662F \u2265 1 \u7684\u6574\u6570" };
+  if (count3 > BATCH_MAX_USERS) return { error: `\u5355\u6B21\u6700\u591A\u521B\u5EFA ${BATCH_MAX_USERS} \u4E2A\u7528\u6237` };
   const role = body.role === void 0 ? "user" : String(body.role);
   const batchRoleError = await validateRoleValue(db, role);
-  if (batchRoleError) return badRequest(batchRoleError);
-  if (role === "admin" && body.confirmAdmin !== true) {
-    return badRequest("\u6279\u91CF\u521B\u5EFA\u7BA1\u7406\u5458\u9700\u8981\u663E\u5F0F\u786E\u8BA4\uFF1A\u8BF7\u6C42\u643A\u5E26 confirmAdmin: true");
+  if (batchRoleError) return { error: batchRoleError };
+  if (isActiveAdmin(role, "active") && body.confirmAdmin !== true) {
+    return { error: "\u6279\u91CF\u521B\u5EFA\u7BA1\u7406\u5458\u9700\u8981\u663E\u5F0F\u786E\u8BA4\uFF1A\u8BF7\u6C42\u643A\u5E26 confirmAdmin: true" };
   }
-  const adminSlot = role === "admin" ? await singleAdminViolation(db, "add") : null;
-  if (adminSlot) return badRequest(`${adminSlot}\uFF0C\u6279\u91CF\u521B\u5EFA\u8BF7\u6539\u7528\u666E\u901A\u7528\u6237\u6216\u81EA\u5B9A\u4E49\u89D2\u8272`);
+  const adminSlot = isActiveAdmin(role, "active") ? await singleAdminViolation(db, "add") : null;
+  if (adminSlot) return { error: `${adminSlot}\uFF0C\u6279\u91CF\u521B\u5EFA\u8BF7\u6539\u7528\u666E\u901A\u7528\u6237\u6216\u81EA\u5B9A\u4E49\u89D2\u8272` };
   let groupId = body.groupId;
   if (groupId !== void 0 && groupId !== null && groupId !== "") {
     groupId = Number(groupId);
     if (!Number.isInteger(groupId) || groupId <= 0)
-      return badRequest("groupId \u5FC5\u987B\u662F\u6B63\u6574\u6570\u6216 null");
+      return { error: "groupId \u5FC5\u987B\u662F\u6B63\u6574\u6570\u6216 null" };
   } else {
     groupId = null;
   }
-  if (groupId && !await getGroupById(db, groupId)) return badRequest("\u7528\u6237\u7EC4\u4E0D\u5B58\u5728");
+  if (groupId && !await getGroupById(db, groupId)) return { error: "\u7528\u6237\u7EC4\u4E0D\u5B58\u5728" };
   const prefix = String(body.namePrefix ?? "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
-  if (prefix.length > 20) return badRequest("namePrefix \u9700 \u2264 20 \u4E2A\u5B57\u7B26\uFF08\u5B57\u6BCD\u6570\u5B57\u4E0B\u5212\u7EBF\u8FDE\u5B57\u7B26\uFF09");
+  if (prefix.length > 20) return { error: "namePrefix \u9700 \u2264 20 \u4E2A\u5B57\u7B26\uFF08\u5B57\u6BCD\u6570\u5B57\u4E0B\u5212\u7EBF\u8FDE\u5B57\u7B26\uFF09" };
   const effectivePrefix = prefix || `user${generateUsernameSuffix(3)}`;
   const template = body.displayNameTemplate === void 0 ? "" : String(body.displayNameTemplate).slice(0, 32);
   const permissions = body.features === void 0 ? "{}" : serializePermissions(body.features);
+  return { input: { count: count3, role, groupId, effectivePrefix, template, permissions } };
+}
+__name(validateBatchInput, "validateBatchInput");
+async function buildCandidates(db, effectivePrefix, count3) {
   const taken = new Set(await listUsernamesByPrefix(db, effectivePrefix));
   const candidates = [];
   let skipped = 0;
@@ -12819,11 +13320,10 @@ async function handleBatchCreateUsers(context2, db) {
     }
     candidates.push(username);
   }
-  if (candidates.length < count3) {
-    return badRequest(
-      `\u4EC5\u80FD\u521B\u5EFA ${candidates.length}/${count3} \u4E2A\u7528\u6237\uFF1A\u53EF\u7528\u7528\u6237\u540D\u4E0D\u8DB3\uFF0C\u8BF7\u6362\u66F4\u77ED\u7684\u7528\u6237\u540D\u524D\u7F00`
-    );
-  }
+  return { candidates, skipped };
+}
+__name(buildCandidates, "buildCandidates");
+async function deriveCredentialRows(candidates, { template, role, groupId, permissions }) {
   const passwords = candidates.map(() => generateUserPassword());
   const rows = candidates.map((username, index) => {
     const userKey = generateUserKey();
@@ -12846,6 +13346,24 @@ async function handleBatchCreateUsers(context2, db) {
     row.passwordHash = passwordHashes[index];
     row.keyHash = keyHashes[index];
   });
+  return rows;
+}
+__name(deriveCredentialRows, "deriveCredentialRows");
+async function handleBatchCreateUsers(context2, db) {
+  const gate = await guard2(context2, db);
+  if (!gate.ok) return gate.response;
+  const parsed = await readJson(context2);
+  if (!parsed.ok) return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
+  const body = parsed.value ?? {};
+  const { error: error3, input } = await validateBatchInput(db, body);
+  if (error3) return badRequest(error3);
+  const { candidates, skipped } = await buildCandidates(db, input.effectivePrefix, input.count);
+  if (candidates.length < input.count) {
+    return badRequest(
+      `\u4EC5\u80FD\u521B\u5EFA ${candidates.length}/${input.count} \u4E2A\u7528\u6237\uFF1A\u53EF\u7528\u7528\u6237\u540D\u4E0D\u8DB3\uFF0C\u8BF7\u6362\u66F4\u77ED\u7684\u7528\u6237\u540D\u524D\u7F00`
+    );
+  }
+  const rows = await deriveCredentialRows(candidates, input);
   const written = await writeUserGuarded(
     () => createUsersBulk(db, rows),
     (column) => column === "username" ? "\u8D26\u53F7\u5DF2\u5B58\u5728\uFF08\u5E76\u53D1\u521B\u5EFA\u51B2\u7A81\uFF09\uFF0C\u8BF7\u91CD\u8BD5" : "UID \u5DF2\u88AB\u5360\u7528"
@@ -12857,18 +13375,38 @@ async function handleBatchCreateUsers(context2, db) {
     id: idByUsername.get(row.username) ?? null,
     username: row.username,
     displayName: row.displayName,
-    role,
-    groupId,
+    role: input.role,
+    groupId: input.groupId,
     password: row.password,
     userKey: row.userKey
   }));
   invalidateAuthStateCache();
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.batch_create",
+    "user",
+    null,
+    input.effectivePrefix,
+    `count=${created.length} role=${input.role}`
+  );
   return jsonResponse(
     { success: true, data: { created, skipped } },
     { status: 201, headers: NO_CACHE }
   );
 }
 __name(handleBatchCreateUsers, "handleBatchCreateUsers");
+
+// api/_users/audit-handlers.js
+async function handleListAuditLogs(context2, db) {
+  const gate = await guard2(context2, db);
+  if (!gate.ok) return gate.response;
+  const url = new URL(context2.request.url);
+  const limit = url.searchParams.get("limit") ?? void 0;
+  const logs = await listAuditLogs(db, limit === void 0 ? 100 : Number(limit));
+  return jsonResponse({ success: true, data: { logs } }, { headers: NO_CACHE });
+}
+__name(handleListAuditLogs, "handleListAuditLogs");
 
 // api/_users/users-credentials.js
 async function handleResetUserKey(context2, db, id) {
@@ -12887,6 +13425,15 @@ async function handleResetUserKey(context2, db, id) {
   });
   await deleteUserChannels(db, Number(id)).catch(() => {
   });
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.key_reset",
+    "user",
+    Number(id),
+    row.username,
+    "\u91CD\u7F6E\u7528\u6237\u5BC6\u94A5(\u65E7\u5BC6\u94A5\u5373\u540A\u9500)"
+  );
   return jsonResponse(
     { success: true, data: { userKey, preview: userKeyPreview(userKey), createdAt: now2 } },
     { headers: NO_CACHE }
@@ -12905,7 +13452,7 @@ async function handleCreateUserByUid(context2, db) {
   const role = body.role === void 0 ? "user" : String(body.role);
   const uidRoleError = await validateRoleValue(db, role);
   if (uidRoleError) return badRequest(uidRoleError);
-  const adminSlot = role === "admin" ? await singleAdminViolation(db, "add") : null;
+  const adminSlot = isActiveAdmin(role, "active") ? await singleAdminViolation(db, "add") : null;
   if (adminSlot) return badRequest(`${adminSlot}\uFF0C\u8BF7\u6539\u7528\u666E\u901A\u7528\u6237\u6216\u81EA\u5B9A\u4E49\u89D2\u8272`);
   let groupId = body.groupId;
   if (groupId !== void 0 && groupId !== null && groupId !== "") {
@@ -12943,6 +13490,15 @@ async function handleCreateUserByUid(context2, db) {
     preview: userKeyPreview(userKey)
   });
   invalidateAuthStateCache();
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.create_uid",
+    "user",
+    user.id,
+    user.username,
+    `uid=${uid}`
+  );
   return jsonResponse(
     {
       success: true,
@@ -12971,6 +13527,15 @@ async function handleResetUserQuota(context2, db, id) {
     }
   }
   const user = await resetUserQuota(db, Number(id), { total: total ?? null });
+  await recordAudit(
+    db,
+    gate.principal,
+    "user.quota_reset",
+    "user",
+    Number(id),
+    row.username,
+    `total=${user.keyQuota.total}`
+  );
   return jsonResponse(
     { success: true, data: { keyQuota: user.keyQuota, resetTo: user.keyQuota.total } },
     { headers: NO_CACHE }
@@ -13009,7 +13574,17 @@ function validateGroupPayload(body) {
   if (name.length < 1 || name.length > 32) return { error: "\u7EC4\u540D\u9700 1-32 \u4E2A\u5B57\u7B26" };
   const description = body.description === void 0 ? void 0 : String(body.description);
   const permissions = body.features === void 0 ? void 0 : serializePermissions(body.features);
-  return { value: { name, description, permissions } };
+  let parentId;
+  if (body.parentId !== void 0) {
+    if (body.parentId === null || body.parentId === "") parentId = null;
+    else {
+      parentId = Number(body.parentId);
+      if (!Number.isInteger(parentId) || parentId < 1) {
+        return { error: "parentId \u5FC5\u987B\u662F\u6B63\u6574\u6570\u6216 null" };
+      }
+    }
+  }
+  return { value: { name, description, permissions, parentId } };
 }
 __name(validateGroupPayload, "validateGroupPayload");
 async function handleListGroups(context2, db) {
@@ -13033,7 +13608,20 @@ async function handleCreateGroup(context2, db) {
   const all = await listGroups(db);
   if (all.some((group4) => group4.name === check2.value.name))
     return badRequest(`\u7EC4\u540D\u5DF2\u5B58\u5728\uFF1A${check2.value.name}`);
+  if (check2.value.parentId !== void 0 && check2.value.parentId !== null) {
+    const cycle = await validateGroupParent(db, null, check2.value.parentId);
+    if (cycle) return badRequest(cycle);
+  }
   const group3 = await createGroup(db, check2.value);
+  await recordAudit(
+    db,
+    gate.principal,
+    "group.create",
+    "group",
+    group3.id,
+    group3.name,
+    `\u63CF\u8FF0:${group3.description || "\u2014"}`
+  );
   return jsonResponse({ success: true, data: group3 }, { status: 201, headers: NO_CACHE });
 }
 __name(handleCreateGroup, "handleCreateGroup");
@@ -13053,7 +13641,20 @@ async function handlePatchGroup(context2, db, id) {
   if (all.some((group4) => group4.name === check2.value.name && group4.id !== Number(id))) {
     return badRequest(`\u7EC4\u540D\u5DF2\u5B58\u5728\uFF1A${check2.value.name}`);
   }
+  if (check2.value.parentId !== void 0) {
+    const cycle = await validateGroupParent(db, id, check2.value.parentId);
+    if (cycle) return badRequest(cycle);
+  }
   const group3 = await updateGroup(db, id, check2.value);
+  await recordAudit(
+    db,
+    gate.principal,
+    "group.update",
+    "group",
+    group3.id,
+    group3.name,
+    `\u53D8\u66F4:${Object.keys(check2.value).join(", ") || "\u65E0"}`
+  );
   return jsonResponse({ success: true, data: group3 }, { headers: NO_CACHE });
 }
 __name(handlePatchGroup, "handlePatchGroup");
@@ -13067,6 +13668,15 @@ async function handleDeleteGroup(context2, db, id) {
   }
   const members = await countGroupMembers(db, id);
   await deleteGroup(db, id);
+  await recordAudit(
+    db,
+    gate.principal,
+    "group.delete",
+    "group",
+    id,
+    existing.name,
+    `\u89E3\u7ED1\u6210\u5458:${members}`
+  );
   return jsonResponse(
     { success: true, data: { deleted: Number(id), unboundMembers: members } },
     { headers: NO_CACHE }
@@ -13102,6 +13712,15 @@ async function handleCreateRole(context2, db) {
   if (all.some((role2) => role2.name === check2.value.name))
     return badRequest(`\u89D2\u8272\u540D\u5DF2\u5B58\u5728\uFF1A${check2.value.name}`);
   const role = await createRole(db, check2.value);
+  await recordAudit(
+    db,
+    gate.principal,
+    "role.create",
+    "role",
+    role.id,
+    role.name,
+    `\u63CF\u8FF0:${role.description || "\u2014"}`
+  );
   return jsonResponse({ success: true, data: { role } }, { status: 201, headers: NO_CACHE });
 }
 __name(handleCreateRole, "handleCreateRole");
@@ -13120,6 +13739,15 @@ async function handlePatchRole(context2, db, id) {
     return badRequest(`\u89D2\u8272\u540D\u5DF2\u5B58\u5728\uFF1A${check2.value.name}`);
   }
   const role = await updateRole(db, id, check2.value);
+  await recordAudit(
+    db,
+    gate.principal,
+    "role.update",
+    "role",
+    role.id,
+    role.name,
+    `\u53D8\u66F4:${Object.keys(check2.value).filter((key) => key !== "name").join(", ") || "\u4EC5\u540D\u79F0"}`
+  );
   return jsonResponse({ success: true, data: { role } }, { headers: NO_CACHE });
 }
 __name(handlePatchRole, "handlePatchRole");
@@ -13129,6 +13757,15 @@ async function handleDeleteRole(context2, db, id) {
   const existing = await getRoleById(db, id);
   if (!existing) return notFound("\u89D2\u8272\u4E0D\u5B58\u5728");
   const result = await deleteRole(db, id);
+  await recordAudit(
+    db,
+    gate.principal,
+    "role.delete",
+    "role",
+    id,
+    existing.name,
+    `\u5F15\u7528\u7528\u6237\u56DE\u843D:${result.demotedUsers}`
+  );
   return jsonResponse(
     { success: true, data: { deleted: result.deleted, demotedUsers: result.demotedUsers } },
     { headers: NO_CACHE }
@@ -13160,6 +13797,10 @@ async function handleUsersRequest(context2, db, path, method) {
     }
     if (path === "/api/users/presence") {
       if (method === "GET") return await handleListUserPresence(context2, db);
+      return methodNotAllowed(method, "GET");
+    }
+    if (path === "/api/users/audit") {
+      if (method === "GET") return await handleListAuditLogs(context2, db);
       return methodNotAllowed(method, "GET");
     }
     if (path === "/api/users/roles") {
@@ -13269,33 +13910,37 @@ async function registerHeartbeat(db, context2, device, heartbeatIp) {
   }
 }
 __name(registerHeartbeat, "registerHeartbeat");
-async function buildStatsSnapshot(db, url, { device, isHeartbeat, panelConfig, heartbeatNote, keyQuota }) {
-  const stats = await getStats(db, clientTzOffset(url.searchParams));
-  let exportVersions = {};
+async function loadExportVersions(db) {
   try {
-    exportVersions = await readExportRevisions(db);
+    return await readExportRevisions(db);
   } catch (error3) {
     console.warn("[revisions] \u4FEE\u8BA2\u53F7\u8BFB\u53D6\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u7EDF\u8BA1\uFF09:", error3?.message ?? error3);
+    return {};
   }
-  let devices = [];
-  let deviceSummary2 = { total: 0, online: 0, alertCount: 0, alerts: [] };
+}
+__name(loadExportVersions, "loadExportVersions");
+async function loadDevicesReport(db, url, exportVersions) {
+  const deviceSummary2 = { total: 0, online: 0, alertCount: 0, alerts: [] };
   const deviceTypeFilter = url.searchParams.get("device-type") || "";
   const usernameFilter = url.searchParams.get("username") || "";
   const isolated = Boolean(deviceTypeFilter || usernameFilter);
-  let presenceDevices = null;
   try {
-    ({ devices, deviceSummary: deviceSummary2 } = await getDevicesReport(db, {
+    const report2 = await getDevicesReport(db, {
       limit: 100,
       deviceType: deviceTypeFilter,
       username: usernameFilter,
       exportVersions
-    }));
-    if (!isolated) presenceDevices = devices;
+    });
+    return { ...report2, presenceDevices: isolated ? null : report2.devices, isolated };
   } catch (error3) {
     console.warn("[devices] \u8BBE\u5907\u62A5\u8868\u8BFB\u53D6\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u7EDF\u8BA1\uFF09:", error3?.message ?? error3);
+    return { devices: [], deviceSummary: deviceSummary2, presenceDevices: null, isolated };
   }
-  let clients = [];
+}
+__name(loadDevicesReport, "loadDevicesReport");
+async function collectClients(db, url, isHeartbeat, devices, isolated) {
   if ((isHeartbeat || url.searchParams.get("with-clients") === "1") && !isolated) {
+    const clients = [];
     const seen = /* @__PURE__ */ new Set();
     for (const row of devices) {
       if (!row.deviceId.startsWith("client:")) continue;
@@ -13318,9 +13963,13 @@ async function buildStatsSnapshot(db, url, { device, isHeartbeat, panelConfig, h
       } catch {
       }
     }
+    return clients;
   }
-  let userPresences = [];
-  let userSummary = {
+  return [];
+}
+__name(collectClients, "collectClients");
+async function loadUserPresence(db, presenceDevices) {
+  const emptySummary = {
     total: 0,
     bound: 0,
     unbound: 0,
@@ -13332,13 +13981,27 @@ async function buildStatsSnapshot(db, url, { device, isHeartbeat, panelConfig, h
     unboundDevices: 0
   };
   try {
-    ({ users: userPresences, userSummary } = await getUserPresenceReport(db, {
+    const report2 = await getUserPresenceReport(db, {
       limit: 100,
       devices: presenceDevices
-    }));
+    });
+    return { users: report2.users, userSummary: report2.userSummary };
   } catch (error3) {
     console.warn("[presence] \u7528\u6237\u770B\u677F\u8BFB\u53D6\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u7EDF\u8BA1\uFF09:", error3?.message ?? error3);
+    return { users: [], userSummary: emptySummary };
   }
+}
+__name(loadUserPresence, "loadUserPresence");
+async function buildStatsSnapshot(db, url, { device, isHeartbeat, panelConfig, heartbeatNote, keyQuota }) {
+  const stats = await getStats(db, clientTzOffset(url.searchParams));
+  const exportVersions = await loadExportVersions(db);
+  const { devices, deviceSummary: deviceSummary2, presenceDevices, isolated } = await loadDevicesReport(
+    db,
+    url,
+    exportVersions
+  );
+  const clients = await collectClients(db, url, isHeartbeat, devices, isolated);
+  const { users: userPresences, userSummary } = await loadUserPresence(db, presenceDevices);
   if (!panelConfig.recordSourceIp) {
     for (const row of devices) row.ip = "";
     for (const presence of userPresences) {
@@ -13370,8 +14033,38 @@ async function buildStatsSnapshot(db, url, { device, isHeartbeat, panelConfig, h
 }
 __name(buildStatsSnapshot, "buildStatsSnapshot");
 
+// api/_logger/read-auth.js
+function readAuthForced(env2) {
+  const value = String(env2?.PANEL_READ_AUTH ?? "").trim();
+  return value === "1" || value.toLowerCase() === "true";
+}
+__name(readAuthForced, "readAuthForced");
+async function guardReadAuth(context2, db) {
+  const auth = await requireReportAuth(context2.env, db, context2);
+  if (readAuthForced(context2?.env)) {
+    if (!auth.ok) return auth.response;
+    if (auth.principal?.type === "anonymous-legacy") {
+      return jsonResponse(
+        {
+          success: false,
+          error: "PANEL_READ_AUTH \u5DF2\u542F\u7528\uFF1A\u53EA\u8BFB\u63A5\u53E3\u8981\u6C42\u8EAB\u4EFD\uFF08\u4E0A\u62A5\u4EE4\u724C\u6216\u767B\u5F55\u4F1A\u8BDD\uFF09"
+        },
+        { status: 401, headers: NO_CACHE }
+      );
+    }
+  }
+  if (!auth.ok && auth.principal?.type === "invalid-key") return auth.response;
+  const authEnabled = await isAuthEnabled(db);
+  if (!authEnabled) return null;
+  const principal = auth.ok ? auth.principal : await resolvePrincipal(context2.env, db, context2.request, "", context2);
+  return requireFeature(principal, "logs.view", { path: "/api/logger", db });
+}
+__name(guardReadAuth, "guardReadAuth");
+
 // api/_logger/reads-meta.js
 async function handleMeta(context2, db) {
+  const denied = await guardReadAuth(context2, db);
+  if (denied) return denied;
   const authEnabled = await isAuthEnabled(db);
   return jsonResponse(
     {
@@ -13427,71 +14120,7 @@ async function handleMeta(context2, db) {
 }
 __name(handleMeta, "handleMeta");
 
-// api/_logger/reads.js
-function readAuthEnabled(env2) {
-  const value = String(env2?.PANEL_READ_AUTH ?? "").trim();
-  return value === "1" || value.toLowerCase() === "true";
-}
-__name(readAuthEnabled, "readAuthEnabled");
-async function guardReadAuth(context2, db) {
-  if (!readAuthEnabled(context2?.env)) return null;
-  const auth = await requireReportAuth(context2.env, db, context2);
-  return auth.ok ? null : auth.response;
-}
-__name(guardReadAuth, "guardReadAuth");
-async function handleList(context2, db, url) {
-  const denied = await guardReadAuth(context2, db);
-  if (denied) return denied;
-  const logs = await listLogs(db, {
-    search: url.searchParams.get("search") || "",
-    policy: url.searchParams.get("policy") || "ALL",
-    type: url.searchParams.get("type") || "ALL",
-    limit: url.searchParams.get("limit") || 5e3
-  });
-  const data = (await readPanelConfig(db)).recordSourceIp ? logs : logs.map(({ ip, ...rest }) => ({ ...rest, ip: "" }));
-  return jsonResponse(
-    { success: true, data },
-    {
-      headers: {
-        ...CACHE_OK,
-        ...readOnlyWarningHeaders(context2.env, await isAuthEnabled(db))
-      }
-    }
-  );
-}
-__name(handleList, "handleList");
-async function handleStats(context2, db, url) {
-  const denied = await guardReadAuth(context2, db);
-  if (denied) return denied;
-  const panelConfig = await readPanelConfig(db);
-  const heartbeatIp = panelConfig.recordSourceIp ? clientIp(context2.request) : "";
-  const device = parseDeviceHeaders(context2.request);
-  const isHeartbeat = Boolean(device.clientId);
-  let heartbeatNote = "";
-  let keyQuota = null;
-  if (isHeartbeat) {
-    const reportAuth = await requireReportAuth(context2.env, db, context2);
-    if (!reportAuth.ok) {
-      heartbeatNote = "heartbeat-auth-failed";
-    } else {
-      if (reportAuth.principal?.via === "user-key") keyQuota = reportAuth.principal.keyQuota;
-      await registerHeartbeat(db, context2, device, heartbeatIp);
-    }
-  }
-  const data = await buildStatsSnapshot(db, url, {
-    device,
-    isHeartbeat,
-    panelConfig,
-    heartbeatNote,
-    keyQuota
-  });
-  const headers = {
-    ...isHeartbeat ? { "Cache-Control": "no-store" } : CACHE_OK,
-    ...readOnlyWarningHeaders(context2.env, await isAuthEnabled(db))
-  };
-  return jsonResponse({ success: true, data }, { headers });
-}
-__name(handleStats, "handleStats");
+// api/_logger/reads-export.js
 async function handleExport(context2, db, url) {
   const denied = await guardReadAuth(context2, db);
   if (denied) return denied;
@@ -13528,7 +14157,8 @@ async function handleExport(context2, db, url) {
   const revision = await revisionFromLines(db, type, lines, count3);
   return textResponse(output, {
     headers: {
-      "Cache-Control": "public, max-age=60",
+      // 导出面同样身份相关：private 防共享代理缓存（见 api-constants CACHE_PRIVATE）
+      "Cache-Control": "private, max-age=60",
       "X-Export-Count": String(count3),
       "X-Export-IPv4": String(result.ipv4),
       "X-Export-IPv6": String(result.ipv6),
@@ -13574,7 +14204,7 @@ async function handleExportSummary(context2, db, url) {
     },
     {
       headers: {
-        ...CACHE_OK,
+        ...CACHE_PRIVATE,
         ...readOnlyWarningHeaders(context2.env, await isAuthEnabled(db))
       }
     }
@@ -13607,8 +14237,65 @@ async function handleExportVersions(context2, db) {
   );
 }
 __name(handleExportVersions, "handleExportVersions");
-async function handleSchema() {
-  return textResponse(LOGS_SCHEMA);
+
+// api/_logger/reads.js
+async function handleList(context2, db, url) {
+  const denied = await guardReadAuth(context2, db);
+  if (denied) return denied;
+  const logs = await listLogs(db, {
+    search: url.searchParams.get("search") || "",
+    policy: url.searchParams.get("policy") || "ALL",
+    type: url.searchParams.get("type") || "ALL",
+    limit: url.searchParams.get("limit") || 5e3
+  });
+  const data = (await readPanelConfig(db)).recordSourceIp ? logs : logs.map(({ ip, ...rest }) => ({ ...rest, ip: "" }));
+  return jsonResponse(
+    { success: true, data },
+    {
+      headers: {
+        ...CACHE_PRIVATE,
+        ...readOnlyWarningHeaders(context2.env, await isAuthEnabled(db))
+      }
+    }
+  );
+}
+__name(handleList, "handleList");
+async function handleStats(context2, db, url) {
+  const denied = await guardReadAuth(context2, db);
+  if (denied) return denied;
+  const panelConfig = await readPanelConfig(db);
+  const heartbeatIp = panelConfig.recordSourceIp ? clientIp(context2.request) : "";
+  const device = parseDeviceHeaders(context2.request);
+  const isHeartbeat = Boolean(device.clientId);
+  let heartbeatNote = "";
+  let keyQuota = null;
+  if (isHeartbeat) {
+    const reportAuth = await requireReportAuth(context2.env, db, context2);
+    if (!reportAuth.ok) {
+      heartbeatNote = "heartbeat-auth-failed";
+    } else {
+      if (reportAuth.principal?.via === "user-key") keyQuota = reportAuth.principal.keyQuota;
+      await registerHeartbeat(db, context2, device, heartbeatIp);
+    }
+  }
+  const data = await buildStatsSnapshot(db, url, {
+    device,
+    isHeartbeat,
+    panelConfig,
+    heartbeatNote,
+    keyQuota
+  });
+  const headers = {
+    ...isHeartbeat ? { "Cache-Control": "no-store" } : CACHE_PRIVATE,
+    ...readOnlyWarningHeaders(context2.env, await isAuthEnabled(db))
+  };
+  return jsonResponse({ success: true, data }, { headers });
+}
+__name(handleStats, "handleStats");
+async function handleSchema(context2, db) {
+  const denied = await guardReadAuth(context2, db);
+  if (denied) return denied;
+  return textResponse(LOGS_SCHEMA, { headers: NO_CACHE });
 }
 __name(handleSchema, "handleSchema");
 
@@ -13733,11 +14420,11 @@ var WRITE_PATH_FEATURES = {
 async function handleWrite(context2, db, path) {
   const auth = await requireMutationAuth(context2.env, db, context2.request, context2);
   if (!auth.ok) return auth.response;
-  const featureDenied = await requireFeature(auth.principal, "logs.write", { path });
+  const featureDenied = await requireFeature(auth.principal, "logs.write", { path, db });
   if (featureDenied) return featureDenied;
   const pathFeature = WRITE_PATH_FEATURES[path];
   if (pathFeature) {
-    const pathDenied = await requireFeature(auth.principal, pathFeature, { path });
+    const pathDenied = await requireFeature(auth.principal, pathFeature, { path, db });
     if (pathDenied) return pathDenied;
   }
   switch (path) {
@@ -13894,86 +14581,7 @@ function uidGate(uid) {
   return `uid:${String(uid ?? "").trim()}`;
 }
 __name(uidGate, "uidGate");
-async function handleKeyIssue(context2, db) {
-  const ip = clientIp(context2.request);
-  const parsed = await readJson(context2);
-  if (!parsed.ok) return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
-  const uid = String(parsed.value?.uid ?? "").trim();
-  if (!uid)
-    return badRequest("uid \u4E0D\u80FD\u4E3A\u7A7A\uFF1A\u8BF7\u5728\u6A21\u7EC4\u53C2\u6570 FINAL_UID \u91CC\u586B\u5199\u300C\u7528\u6237\u300D\u9875\u5206\u914D\u7684\u7B80\u4FBF ID");
-  const ipGate = hitRateLimit(`uid-issue:ip:${ip}`, KEY_ISSUE_IP_LIMIT, KEY_ISSUE_WINDOW_MS);
-  if (!ipGate.allowed)
-    return tooManyRequests("\u53D6\u94A5\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\uFF1A\u8BF7 1 \u5206\u949F\u540E\u91CD\u8BD5", ipGate.retryAfterMs);
-  if (isKeyAuthRateLimited(ip, uidGate(uid))) {
-    return jsonResponse(
-      {
-        success: false,
-        code: "key-rate-limited",
-        error: "\u53D6\u94A5\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF1A\u8BF7 1 \u5206\u949F\u540E\u91CD\u8BD5"
-      },
-      { status: 429, headers: NO_CACHE }
-    );
-  }
-  const row = await getUserByUid(db, uid);
-  if (!row) {
-    noteKeyAuthFailure(ip, uidGate(uid));
-    return jsonResponse(
-      {
-        success: false,
-        code: "uid-not-found",
-        error: "UID \u4E0D\u5B58\u5728\uFF1A\u8BF7\u6838\u5BF9\u6A21\u7EC4\u53C2\u6570 FINAL_UID \u662F\u5426\u4E0E\u300C\u7528\u6237\u300D\u9875\u5206\u914D\u7684\u4E00\u81F4"
-      },
-      { status: 404, headers: NO_CACHE }
-    );
-  }
-  if (String(row.status ?? "active") !== "active") {
-    noteKeyAuthFailure(ip, uidGate(uid));
-    return jsonResponse(
-      {
-        success: false,
-        code: "user-disabled",
-        error: "UID \u5BF9\u5E94\u7684\u8D26\u53F7\u5DF2\u88AB\u7981\u7528\uFF1A\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458"
-      },
-      { status: 403, headers: NO_CACHE }
-    );
-  }
-  if (keyIssueSecretRequired(context2.env) && String(row.key_issue_secret ?? "") !== "") {
-    const supplied = String(parsed.value?.secret ?? "");
-    if (!supplied || !timingSafeEqual(supplied, String(row.key_issue_secret ?? ""))) {
-      noteKeyAuthFailure(ip, uidGate(uid));
-      return jsonResponse(
-        {
-          success: false,
-          code: "key-issue-forbidden",
-          error: "\u53D6\u94A5\u5BC6\u94A5\u4E0D\u6B63\u786E\uFF1A\u8BF7\u643A\u5E26\u300C\u7528\u6237\u300D\u9875\u5206\u914D\u7684\u4E8C\u56E0\u5B50\u5BC6\u94A5"
-        },
-        { status: 403, headers: NO_CACHE }
-      );
-    }
-  }
-  const quota = keyQuotaView(row.key_quota_total, row.key_quota_used);
-  if (quota.total > 0 && quota.remaining <= 0) {
-    noteKeyAuthFailure(ip, uidGate(uid));
-    return jsonResponse(
-      {
-        success: false,
-        code: "key-exhausted",
-        error: "\u8C03\u7528\u989D\u5EA6\u5DF2\u7528\u5B8C\uFF1A\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458\u5728\u300C\u7528\u6237\u300D\u9875\u91CD\u7F6E\u989D\u5EA6\uFF08\u91CD\u7F6E\u540E\u65E0\u9700\u91CD\u65B0\u53D6\u94A5\uFF09"
-      },
-      { status: 403, headers: NO_CACHE }
-    );
-  }
-  const lastIssuedAt = Date.parse(String(row.key_issued_at ?? "")) || 0;
-  if (lastIssuedAt && Date.now() - lastIssuedAt < KEY_ROTATE_WINDOW_MS) {
-    return jsonResponse(
-      {
-        success: false,
-        code: "key-issue-throttled",
-        error: "\u8BE5\u8D26\u53F7\u521A\u521A\u5DF2\u7B7E\u53D1\u8FC7\u5BC6\u94A5\uFF1A\u8BF7 1 \u5206\u949F\u540E\u518D\u8BD5\uFF08\u9762\u677F\u6B63\u5E38\u5237\u65B0\u4E0D\u53D7\u5F71\u54CD\uFF09"
-      },
-      { status: 429, headers: NO_CACHE }
-    );
-  }
+async function issueNewKey(db, row, quota, ip, uid) {
   const userKey = generateUserKey();
   const now2 = (/* @__PURE__ */ new Date()).toISOString();
   await setUserKey(db, row.id, {
@@ -14004,6 +14612,60 @@ async function handleKeyIssue(context2, db) {
     { headers: NO_CACHE }
   );
 }
+__name(issueNewKey, "issueNewKey");
+async function handleKeyIssue(context2, db) {
+  const ip = clientIp(context2.request);
+  const parsed = await readJson(context2);
+  if (!parsed.ok) return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
+  const uid = String(parsed.value?.uid ?? "").trim();
+  if (!uid)
+    return badRequest("uid \u4E0D\u80FD\u4E3A\u7A7A\uFF1A\u8BF7\u5728\u6A21\u7EC4\u53C2\u6570 FINAL_UID \u91CC\u586B\u5199\u300C\u7528\u6237\u300D\u9875\u5206\u914D\u7684\u7B80\u4FBF ID");
+  const deny = /* @__PURE__ */ __name((status4, code, error3, noteFailure = false) => {
+    if (noteFailure) noteKeyAuthFailure(ip, uidGate(uid));
+    return jsonResponse({ success: false, code, error: error3 }, { status: status4, headers: NO_CACHE });
+  }, "deny");
+  const ipGate = hitRateLimit(`uid-issue:ip:${ip}`, KEY_ISSUE_IP_LIMIT, KEY_ISSUE_WINDOW_MS);
+  if (!ipGate.allowed)
+    return tooManyRequests("\u53D6\u94A5\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\uFF1A\u8BF7 1 \u5206\u949F\u540E\u91CD\u8BD5", ipGate.retryAfterMs);
+  if (isKeyAuthRateLimited(ip, uidGate(uid)))
+    return deny(429, "key-rate-limited", "\u53D6\u94A5\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF1A\u8BF7 1 \u5206\u949F\u540E\u91CD\u8BD5");
+  const row = await getUserByUid(db, uid);
+  if (!row)
+    return deny(
+      404,
+      "uid-not-found",
+      "UID \u4E0D\u5B58\u5728\uFF1A\u8BF7\u6838\u5BF9\u6A21\u7EC4\u53C2\u6570 FINAL_UID \u662F\u5426\u4E0E\u300C\u7528\u6237\u300D\u9875\u5206\u914D\u7684\u4E00\u81F4",
+      true
+    );
+  if (String(row.status ?? "active") !== "active")
+    return deny(403, "user-disabled", "UID \u5BF9\u5E94\u7684\u8D26\u53F7\u5DF2\u88AB\u7981\u7528\uFF1A\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458", true);
+  if (keyIssueSecretRequired(context2.env) && String(row.key_issue_secret ?? "") !== "") {
+    const supplied = String(parsed.value?.secret ?? "");
+    if (!supplied || !timingSafeEqual(supplied, String(row.key_issue_secret ?? "")))
+      return deny(
+        403,
+        "key-issue-forbidden",
+        "\u53D6\u94A5\u5BC6\u94A5\u4E0D\u6B63\u786E\uFF1A\u8BF7\u643A\u5E26\u300C\u7528\u6237\u300D\u9875\u5206\u914D\u7684\u4E8C\u56E0\u5B50\u5BC6\u94A5",
+        true
+      );
+  }
+  const quota = keyQuotaView(row.key_quota_total, row.key_quota_used);
+  if (quota.total > 0 && quota.remaining <= 0)
+    return deny(
+      403,
+      "key-exhausted",
+      "\u8C03\u7528\u989D\u5EA6\u5DF2\u7528\u5B8C\uFF1A\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458\u5728\u300C\u7528\u6237\u300D\u9875\u91CD\u7F6E\u989D\u5EA6\uFF08\u91CD\u7F6E\u540E\u65E0\u9700\u91CD\u65B0\u53D6\u94A5\uFF09",
+      true
+    );
+  const lastIssuedAt = Date.parse(String(row.key_issued_at ?? "")) || 0;
+  if (lastIssuedAt && Date.now() - lastIssuedAt < KEY_ROTATE_WINDOW_MS)
+    return deny(
+      429,
+      "key-issue-throttled",
+      "\u8BE5\u8D26\u53F7\u521A\u521A\u5DF2\u7B7E\u53D1\u8FC7\u5BC6\u94A5\uFF1A\u8BF7 1 \u5206\u949F\u540E\u518D\u8BD5\uFF08\u9762\u677F\u6B63\u5E38\u5237\u65B0\u4E0D\u53D7\u5F71\u54CD\uFF09"
+    );
+  return issueNewKey(db, row, quota, ip, uid);
+}
 __name(handleKeyIssue, "handleKeyIssue");
 
 // api/logger.js
@@ -14014,7 +14676,7 @@ function dispatchGet(context2, db, url, path) {
   if (path === "/api/logger/export") return handleExport(context2, db, url);
   if (path === "/api/logger/export-summary") return handleExportSummary(context2, db, url);
   if (path === "/api/logger/export-versions") return handleExportVersions(context2, db);
-  if (path === "/api/logger/schema") return handleSchema();
+  if (path === "/api/logger/schema") return handleSchema(context2, db);
   if (path === "/api/logger/meta") return handleMeta(context2, db);
   if (WRITE_PATHS.has(path)) return methodNotAllowed("GET", "POST");
   return notFound(`\u672A\u77E5\u7684\u63A5\u53E3\uFF1A${path}`);
@@ -14323,6 +14985,88 @@ async function onRequest11(context2) {
 }
 __name(onRequest11, "onRequest");
 
+// api/rollouts.js
+var FEATURE_PATH = /^\/api\/rollouts\/([\w.-]+)$/;
+async function onRequest12(context2) {
+  const { adapter: db, response } = await resolveAdapter(context2.env);
+  if (response) return response;
+  await db.ready;
+  const url = new URL(context2.request.url);
+  const path = url.pathname.replace(/\/+$/, "") || url.pathname;
+  const method = context2.request.method;
+  const gate = await requireAdminAuth(context2.env, db, context2.request, context2);
+  if (!gate.ok) return gate.response;
+  if (method === "GET" && (path === "/api/rollouts" || path === "/api/rollouts/")) {
+    const rollouts = await listRollouts(db);
+    return jsonResponse({ success: true, data: { rollouts } }, { headers: NO_CACHE });
+  }
+  const match2 = path.match(FEATURE_PATH);
+  if (!match2) {
+    return jsonResponse(
+      { success: false, error: `\u672A\u77E5\u7684\u63A5\u53E3\uFF1A${path}` },
+      { status: 404, headers: NO_CACHE }
+    );
+  }
+  const feature = match2[1];
+  if (method === "PUT") {
+    if (!await rolloutsTableReady(db)) {
+      return jsonResponse(
+        {
+          success: false,
+          error: "feature_rollouts \u8868\u4E0D\u5B58\u5728\uFF1A\u8BF7\u5230\u300C\u6570\u636E\u300D\u9875\u6267\u884C\u8868\u7ED3\u6784\u81EA\u6108\uFF08v19\uFF09"
+        },
+        { status: 409, headers: NO_CACHE }
+      );
+    }
+    if (!Object.prototype.hasOwnProperty.call(FEATURES, feature)) {
+      return badRequest(`\u672A\u77E5\u7684\u529F\u80FD\u952E\uFF1A${feature}\uFF08\u4EE5 /api/auth/me \u7684 features \u6CE8\u518C\u8868\u4E3A\u51C6\uFF09`);
+    }
+    let body;
+    try {
+      body = await context2.request.json();
+    } catch {
+      return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
+    }
+    const validated = validateRolloutConfig(body);
+    if (!validated.ok) return badRequest(validated.error);
+    const saved = await writeRollout(db, feature, validated.config);
+    await recordAudit(
+      db,
+      gate.principal,
+      "rollout.update",
+      "feature",
+      feature,
+      FEATURES[feature] ?? feature,
+      JSON.stringify(validated.config)
+    );
+    return jsonResponse({ success: true, data: { rollout: saved } }, { status: 200 });
+  }
+  if (method === "DELETE") {
+    const removed = await deleteRollout(db, feature);
+    if (!removed) {
+      return jsonResponse(
+        { success: false, error: `\u8BE5\u529F\u80FD\u6CA1\u6709\u7070\u5EA6\u914D\u7F6E\uFF1A${feature}` },
+        { status: 404, headers: NO_CACHE }
+      );
+    }
+    await recordAudit(
+      db,
+      gate.principal,
+      "rollout.delete",
+      "feature",
+      feature,
+      FEATURES[feature] ?? feature,
+      ""
+    );
+    return jsonResponse({ success: true, data: { removed: feature } });
+  }
+  return jsonResponse(
+    { success: false, error: `\u4E0D\u652F\u6301\u7684\u65B9\u6CD5\uFF1A${method}` },
+    { status: 405, headers: NO_CACHE }
+  );
+}
+__name(onRequest12, "onRequest");
+
 // api/rules.js
 var TAG12 = "api/rules";
 var ALLOWED_ACTIONS2 = ["REJECT", "PROXY", "DIRECT", "FINAL"];
@@ -14341,7 +15085,7 @@ function validateRuleInput(value) {
   return { value: { domain: domain2, action, remark } };
 }
 __name(validateRuleInput, "validateRuleInput");
-async function onRequest12(context2) {
+async function onRequest13(context2) {
   const { adapter: db, response } = await resolveAdapter(context2.env);
   if (response) return response;
   const url = new URL(context2.request.url);
@@ -14358,7 +15102,7 @@ async function onRequest12(context2) {
     return errorResponse(TAG12, method, path, error3);
   }
 }
-__name(onRequest12, "onRequest");
+__name(onRequest13, "onRequest");
 async function listRules(db, url) {
   const keyword = url.searchParams.get("search")?.trim();
   const like = `%${likeEscape(keyword)}%`;
@@ -14380,7 +15124,7 @@ __name(exportSubscription, "exportSubscription");
 async function createRule(context2, db) {
   const auth = await requireMutationAuth(context2.env, db, context2.request, context2);
   if (!auth.ok) return auth.response;
-  const featureDenied = await requireFeature(auth.principal, "logs.write");
+  const featureDenied = await requireFeature(auth.principal, "logs.write", { db });
   if (featureDenied) return featureDenied;
   const parsed = await readJson(context2);
   if (!parsed.ok) return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
@@ -14411,7 +15155,7 @@ __name(handleRuleItem, "handleRuleItem");
 async function writeRuleItem(context2, db, id, method) {
   const auth = await requireMutationAuth(context2.env, db, context2.request, context2);
   if (!auth.ok) return auth.response;
-  const featureDenied = await requireFeature(auth.principal, "logs.write");
+  const featureDenied = await requireFeature(auth.principal, "logs.write", { db });
   if (featureDenied) return featureDenied;
   if (method === "PUT") return updateRule2(context2, db, id);
   if (method === "DELETE") return removeRule(db, id);
@@ -14465,9 +15209,20 @@ var TABLES = {
   meta: DB_META_SCHEMA,
   auth: AUTH_SCHEMA,
   "user-channels": USER_CHANNELS_SCHEMA,
-  "ai-verdict": DOMAIN_VERDICT_SCHEMA
+  "ai-verdict": DOMAIN_VERDICT_SCHEMA,
+  "feature-rollouts": FEATURE_ROLLOUTS_SCHEMA,
+  "feature-entitlements": FEATURE_ENTITLEMENTS_SCHEMA
 };
-async function onRequest13(context2) {
+async function onRequest14(context2) {
+  const { adapter: db, response } = await resolveAdapter(context2.env);
+  if (response) return response;
+  await db.ready;
+  if (await isAuthEnabled(db)) {
+    const gate = await guardPrincipal(context2.env, db, context2.request, context2, {
+      auth: "admin"
+    });
+    if (!gate.ok) return gate.response;
+  }
   const path = new URL(context2.request.url).pathname;
   const method = context2.request.method;
   if (method === "GET" && path === "/api/schema") {
@@ -14483,8 +15238,12 @@ async function onRequest13(context2) {
         DB_META_SCHEMA,
         AUTH_SCHEMA,
         USER_CHANNELS_SCHEMA,
-        DOMAIN_VERDICT_SCHEMA
-      ].join("\n\n") + "\n\n-- \u5168\u90E8\u8BED\u53E5\u5747\u4E3A IF NOT EXISTS\uFF0C\u53EF\u91CD\u590D\u6267\u884C\uFF0C\u4E0D\u4F1A\u7834\u574F\u5DF2\u6709\u6570\u636E"
+        DOMAIN_VERDICT_SCHEMA,
+        FEATURE_ROLLOUTS_SCHEMA,
+        FEATURE_ENTITLEMENTS_SCHEMA
+      ].join("\n\n") + "\n\n-- \u5168\u90E8\u8BED\u53E5\u5747\u4E3A IF NOT EXISTS\uFF0C\u53EF\u91CD\u590D\u6267\u884C\uFF0C\u4E0D\u4F1A\u7834\u574F\u5DF2\u6709\u6570\u636E",
+      { headers: NO_CACHE }
+      // DDL 随部署演进且身份相关，禁止缓存
     );
   }
   const match2 = path.match(/^\/api\/schema\/table\/([\w-]+)$/);
@@ -14492,19 +15251,19 @@ async function onRequest13(context2) {
     const schema = TABLES[match2[1]];
     if (!schema)
       return notFound(
-        `\u672A\u77E5\u7684\u8868\uFF1A${match2[1]}\uFF08\u53EF\u9009 rules / logger / prefs / subscriptions / health / heartbeats / devices / meta / auth / user-channels / ai-verdict\uFF09`
+        `\u672A\u77E5\u7684\u8868\uFF1A${match2[1]}\uFF08\u53EF\u9009 rules / logger / prefs / subscriptions / health / heartbeats / devices / meta / auth / user-channels / ai-verdict / feature-rollouts / feature-entitlements\uFF09`
       );
-    return textResponse(schema);
+    return textResponse(schema, { headers: NO_CACHE });
   }
   if (method === "GET") return notFound(`\u672A\u77E5\u7684\u63A5\u53E3\uFF1A${path}`);
   return jsonResponse({ success: false, error: `\u4E0D\u652F\u6301\u7684\u65B9\u6CD5\uFF1A${method}` }, { status: 405 });
 }
-__name(onRequest13, "onRequest");
+__name(onRequest14, "onRequest");
 
 // api/setup.js
 var TAG13 = "api/setup";
 var NO_STORE5 = { "Cache-Control": "no-store" };
-async function onRequest14(context2) {
+async function onRequest15(context2) {
   const url = new URL(context2.request.url);
   const path = url.pathname.replace(/\/+$/, "") || "/api/setup";
   const method = context2.request.method;
@@ -14522,7 +15281,7 @@ async function onRequest14(context2) {
     return errorResponse(TAG13, method, path, error3);
   }
 }
-__name(onRequest14, "onRequest");
+__name(onRequest15, "onRequest");
 async function status2(context2) {
   const backendHint = String(context2.env?.DB_BACKEND ?? "").trim() || "turso";
   const platformTokenConfigured = Boolean(String(context2.env?.TURSO_API_TOKEN ?? "").trim());
@@ -14615,6 +15374,149 @@ async function initSchema(context2) {
   );
 }
 __name(initSchema, "initSchema");
+
+// api/_subscribe/fetch-subscription.js
+var FETCH_TIMEOUT_MS2 = 8e3;
+var FETCH_MAX_ATTEMPTS = 3;
+var FETCH_RETRY_BASE_DELAY_MS = 300;
+var FETCH_MAX_TOTAL_MS = 3e4;
+var MAX_BODY_BYTES = 2 * 1024 * 1024;
+function judgeBodyText(text) {
+  if (!text.trim()) return { ok: false, error: "\u8BA2\u9605\u5185\u5BB9\u4E3A\u7A7A" };
+  if (text.length > MAX_BODY_BYTES) {
+    return { ok: false, error: `\u8BA2\u9605\u5185\u5BB9\u8D85\u8FC7 ${MAX_BODY_BYTES / 1024 / 1024}MB \u4E0A\u9650` };
+  }
+  return { ok: true, text };
+}
+__name(judgeBodyText, "judgeBodyText");
+async function readBodyCapped(response) {
+  const declared = Number(response.headers.get("content-length") || 0);
+  if (declared > MAX_BODY_BYTES) {
+    return { ok: false, error: `\u8BA2\u9605\u5185\u5BB9\u8D85\u8FC7 ${MAX_BODY_BYTES / 1024 / 1024}MB \u4E0A\u9650` };
+  }
+  const reader = response.body?.getReader?.();
+  if (!reader) {
+    try {
+      return judgeBodyText(await response.text());
+    } catch (error3) {
+      return { ok: false, error: `\u8BFB\u53D6\u5185\u5BB9\u5931\u8D25\uFF1A${error3?.message || "\u672A\u77E5\u539F\u56E0"}` };
+    }
+  }
+  const decoder = new TextDecoder();
+  let total = 0;
+  let text = "";
+  try {
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) {
+        await reader.cancel().catch(() => {
+        });
+        return {
+          ok: false,
+          error: `\u8BA2\u9605\u5185\u5BB9\u8D85\u8FC7 ${MAX_BODY_BYTES / 1024 / 1024}MB \u4E0A\u9650`
+        };
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+  } catch (error3) {
+    return { ok: false, error: `\u8BFB\u53D6\u5185\u5BB9\u5931\u8D25\uFF1A${error3?.message || "\u672A\u77E5\u539F\u56E0"}` };
+  }
+  return judgeBodyText(text);
+}
+__name(readBodyCapped, "readBodyCapped");
+async function readBody(response) {
+  if (!response.ok) {
+    return { ok: false, error: `\u8BA2\u9605\u6E90\u8FD4\u56DE HTTP ${response.status}`, status: response.status };
+  }
+  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+  if (contentType.includes("text/html")) {
+    return { ok: false, error: "\u8FD4\u56DE\u7684\u662F\u7F51\u9875\u800C\u4E0D\u662F\u89C4\u5219\u5185\u5BB9\uFF08content-type \u4E3A text/html\uFF09" };
+  }
+  return readBodyCapped(response);
+}
+__name(readBody, "readBody");
+function redactUrlForLog(url) {
+  try {
+    const parsed = new URL(url);
+    parsed.username = "";
+    parsed.password = "";
+    parsed.search = "";
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return "<invalid-url>";
+  }
+}
+__name(redactUrlForLog, "redactUrlForLog");
+var MAX_REDIRECTS = 5;
+function mockOutbound(url, env2) {
+  const base = String(env2?.SUBSCRIBE_MOCK_UPSTREAM ?? "").trim();
+  if (!base) return url;
+  return `${base}?mock_url=${encodeURIComponent(url)}`;
+}
+__name(mockOutbound, "mockOutbound");
+async function fetchWithGuardedRedirects(initialUrl, env2 = null) {
+  let url = initialUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+    const checked = checkSubscriptionUrl(url);
+    if (checked.error) return { error: checked.error, status: 400 };
+    const response = await fetchWithRetry(
+      mockOutbound(checked.url, env2),
+      { redirect: "manual" },
+      {
+        timeoutMs: FETCH_TIMEOUT_MS2,
+        maxAttempts: FETCH_MAX_ATTEMPTS,
+        baseDelayMs: FETCH_RETRY_BASE_DELAY_MS,
+        totalBudgetMs: FETCH_MAX_TOTAL_MS,
+        onRetry: /* @__PURE__ */ __name((info3) => console.warn("[subscribe][fetch] \u53EF\u91CD\u8BD5\uFF0C\u51C6\u5907\u91CD\u8BD5", {
+          ...info3,
+          host: redactUrlForLog(checked.url)
+        }), "onRetry")
+      }
+    ).catch((error3) => error3);
+    if (response instanceof Error) {
+      if (response?.name === "TimeoutError" || response?.name === "AbortError") {
+        return {
+          error: `\u6293\u53D6\u8D85\u65F6\uFF08\u8D85\u8FC7 ${FETCH_TIMEOUT_MS2 / 1e3} \u79D2\u65E0\u54CD\u5E94\uFF09`,
+          status: 504
+        };
+      }
+      return { error: `\u6293\u53D6\u5931\u8D25\uFF1A${response?.message || "\u7F51\u7EDC\u4E0D\u53EF\u8FBE"}`, status: 0 };
+    }
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location)
+        return {
+          error: `\u8BA2\u9605\u6E90\u8FD4\u56DE ${response.status} \u91CD\u5B9A\u5411\u4F46\u6CA1\u6709 Location`,
+          status: 502
+        };
+      url = new URL(location, checked.url).toString();
+      continue;
+    }
+    return { response };
+  }
+  return { error: `\u91CD\u5B9A\u5411\u8D85\u8FC7 ${MAX_REDIRECTS} \u8DF3\uFF0C\u5DF2\u4E2D\u6B62`, status: 508 };
+}
+__name(fetchWithGuardedRedirects, "fetchWithGuardedRedirects");
+async function fetchAndExtract(url, env2 = null, filter = null) {
+  const outcome = await fetchWithGuardedRedirects(url, env2);
+  if (outcome.error) {
+    return { ok: false, error: outcome.error, status: outcome.status ?? 0 };
+  }
+  const response = outcome.response;
+  const gate = await readBody(response);
+  if (!gate.ok) return gate;
+  const first = extractRuleLines(gate.text, filter);
+  const decoded = retryAsBase64(gate.text, first, filter);
+  if (decoded) return decoded;
+  if (first.lines.length === 0) {
+    return { ok: false, error: "\u6CA1\u6709\u4ECE\u5185\u5BB9\u91CC\u8BC6\u522B\u51FA\u4EFB\u4F55\u89C4\u5219\uFF08\u53EF\u80FD\u4E0D\u662F\u89C4\u5219\u8BA2\u9605\uFF09" };
+  }
+  return { ok: true, ...first, truncated: first.lines.length >= MAX_RULE_LINES };
+}
+__name(fetchAndExtract, "fetchAndExtract");
 
 // api/_subscribe/constants.js
 var TAG14 = "api/subscribe";
@@ -14771,7 +15673,7 @@ __name(handleDelete, "handleDelete");
 async function dispatchWrite(context2, db, path) {
   const auth = await requireMutationAuth(context2.env, db, context2.request, context2);
   if (!auth.ok) return auth.response;
-  const featureDenied = await requireFeature(auth.principal, "subscribe.manage", { path });
+  const featureDenied = await requireFeature(auth.principal, "subscribe.manage", { path, db });
   if (featureDenied) return featureDenied;
   const body = await readJson(context2);
   if (!body.ok) return badRequest("\u8BF7\u6C42\u4F53\u4E0D\u662F\u6709\u6548\u7684 JSON");
@@ -14782,7 +15684,7 @@ async function dispatchWrite(context2, db, path) {
   return handleDelete(db, payload);
 }
 __name(dispatchWrite, "dispatchWrite");
-async function onRequest15(context2) {
+async function onRequest16(context2) {
   const { adapter: db, response: configError } = await resolveAdapter(context2.env);
   if (configError) return configError;
   await db.ready;
@@ -14802,7 +15704,7 @@ async function onRequest15(context2) {
     return errorResponse(TAG14, method, path, error3);
   }
 }
-__name(onRequest15, "onRequest");
+__name(onRequest16, "onRequest");
 
 // _utils/trigger.js
 var NO_STORE6 = { "Cache-Control": "no-store" };
@@ -14889,8 +15791,16 @@ var NO_STORE7 = { "Cache-Control": "no-store" };
 var TRIGGER_PREFS_USER2 = "trigger";
 var GIST_SYNC_DOMAIN = "gist-sync";
 var REDUCE_DOMAIN = "reduce-analysis";
-var lastRunKey = /* @__PURE__ */ __name((policyKey) => `trigger.last.${policyKey.toLowerCase()}`, "lastRunKey");
-var gistIdKey = /* @__PURE__ */ __name((policyKey) => `trigger.gistid.${policyKey.toLowerCase()}`, "gistIdKey");
+async function policyKeySegment(policyKey) {
+  const raw = String(policyKey ?? "");
+  if (/^[a-z0-9]+$/i.test(raw)) return raw.toLowerCase();
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  const hex2 = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0"));
+  return `u${hex2.slice(0, 16).join("")}`;
+}
+__name(policyKeySegment, "policyKeySegment");
+var lastRunKey = /* @__PURE__ */ __name(async (policyKey) => normalizeKey(`trigger.last.${await policyKeySegment(policyKey)}`), "lastRunKey");
+var gistIdKey = /* @__PURE__ */ __name(async (policyKey) => normalizeKey(`trigger.gistid.${await policyKeySegment(policyKey)}`), "gistIdKey");
 function isDue(policy, lastRunIso) {
   const intervalMinutes = Number(policy.syncMinutes ?? 0);
   if (!Number.isFinite(intervalMinutes) || intervalMinutes <= 0) return false;
@@ -14916,10 +15826,15 @@ async function handleGistSyncTrigger(context2, db) {
     const policies = await listExportPolicies(db);
     const prefs = await listPrefs(db, TRIGGER_PREFS_USER2);
     const requested = String(body.policyKey ?? "").trim();
-    const targets = policies.filter((policy) => {
-      if (requested) return policy.policyKey === normalizePolicyKey(requested);
-      return isDue(policy, prefs[lastRunKey(policy.policyKey)]);
-    });
+    const targets = [];
+    for (const policy of policies) {
+      if (requested) {
+        if (policy.policyKey !== normalizePolicyKey(requested)) continue;
+      } else if (!isDue(policy, prefs[await lastRunKey(policy.policyKey)])) {
+        continue;
+      }
+      targets.push(policy);
+    }
     for (const policy of targets) {
       const key = policy.policyKey;
       try {
@@ -14946,7 +15861,7 @@ async function handleGistSyncTrigger(context2, db) {
             );
           const content = await buildPolicyExportText(db, key);
           if (!content.trim()) throw new Error("\u5F53\u524D\u7B56\u7565\u6CA1\u6709\u53EF\u4E0A\u4F20\u7684\u89C4\u5219\u884C");
-          const gistId = String(prefs[gistIdKey(key)] ?? "").trim();
+          const gistId = String(prefs[await gistIdKey(key)] ?? "").trim();
           const result = await uploadGistFile({
             gistToken,
             gistId,
@@ -14954,7 +15869,9 @@ async function handleGistSyncTrigger(context2, db) {
             content,
             description: `Surge \u7B56\u7565\u7EC4 \xB7 ${key.toUpperCase()}\uFF08\u7531\u9762\u677F Gist \u5B9A\u65F6\u540C\u6B65\u7EF4\u62A4\uFF09`
           });
-          await savePrefs(db, TRIGGER_PREFS_USER2, { [gistIdKey(key)]: result.gistId });
+          await savePrefs(db, TRIGGER_PREFS_USER2, {
+            [await gistIdKey(key)]: result.gistId
+          });
           await updateExportPolicy(db, policy.id, { gistUrl: result.rawUrl });
           summary.uploaded.push({
             policyKey: key,
@@ -14965,7 +15882,7 @@ async function handleGistSyncTrigger(context2, db) {
           });
         }
         await savePrefs(db, TRIGGER_PREFS_USER2, {
-          [lastRunKey(key)]: (/* @__PURE__ */ new Date()).toISOString()
+          [await lastRunKey(key)]: (/* @__PURE__ */ new Date()).toISOString()
         });
       } catch (error3) {
         summary.errors.push({ policyKey: key, error: error3.message });
@@ -15030,14 +15947,14 @@ async function handleTriggerRequest(context2, db, path, method) {
   }
 }
 __name(handleTriggerRequest, "handleTriggerRequest");
-async function onRequest16(context2) {
+async function onRequest17(context2) {
   const { adapter: db, response } = await resolveAdapter(context2.env);
   if (response) return response;
   await db.ready;
   const url = new URL(context2.request.url);
   return handleTriggerRequest(context2, db, url.pathname, context2.request.method);
 }
-__name(onRequest16, "onRequest");
+__name(onRequest17, "onRequest");
 
 // _utils/turso-platform.js
 var PLATFORM_BASE = "https://api.turso.tech";
@@ -15328,8 +16245,86 @@ async function deleteTursoDatabase(db, name) {
 }
 __name(deleteTursoDatabase, "deleteTursoDatabase");
 
+// api/_turso/panel-platform-usage.js
+function hostOf(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  try {
+    return new URL(text.includes("://") ? text : `https://${text}`).hostname;
+  } catch {
+    return "";
+  }
+}
+__name(hostOf, "hostOf");
+var USAGE_WINDOWS = [
+  ["24h", 1],
+  ["7d", 7],
+  ["30d", 30]
+];
+var USAGE_CACHE_TTL = 60 * 1e3;
+var usageCache2 = { key: "", at: 0, data: null };
+async function panelPlatformUsage(db, env2 = {}) {
+  let backend = "turso";
+  try {
+    backend = resolveDbBackend(env2);
+  } catch {
+  }
+  if (backend !== "turso") {
+    return { error: `\u5F53\u524D\u540E\u7AEF\u4E3A ${backend}\uFF0C\u5E73\u53F0\u7528\u91CF\u4EC5 Turso \u90E8\u7F72\u53EF\u5F97` };
+  }
+  if (!String(env2?.TURSO_API_URL ?? "").trim()) {
+    return { error: "\u672A\u914D\u7F6E\u9762\u677F\u5E93\u5730\u5740\uFF08TURSO_API_URL\uFF09\uFF0C\u65E0\u5E73\u53F0\u7528\u91CF" };
+  }
+  if (!String(env2?.TURSO_API_TOKEN ?? "").trim()) {
+    return {
+      error: "\u672A\u914D\u7F6E\u5E73\u53F0\u4EE4\u724C\uFF08TURSO_API_TOKEN\uFF09\uFF0C\u65E0\u5E73\u53F0\u7528\u91CF\uFF1B\u53EF\u5728 Turso \u63A7\u5236\u53F0\u751F\u6210\u540E\u52A0\u5165\u73AF\u5883\u53D8\u91CF"
+    };
+  }
+  const host = hostOf(env2?.TURSO_API_URL);
+  if (!host) return { error: "\u9762\u677F\u5E93\u5730\u5740\uFF08TURSO_API_URL\uFF09\u65E0\u6CD5\u89E3\u6790" };
+  const registry = await listTursoDatabases(db);
+  let name = (Array.isArray(registry) ? registry : []).find(
+    (row) => hostOf(row?.hostname) === host
+  )?.name;
+  if (!name) {
+    const platformList = await listDatabases(env2).catch((error3) => ({
+      error: error3?.message || "\u5E73\u53F0\u5217\u5E93\u5931\u8D25"
+    }));
+    if (!Array.isArray(platformList)) {
+      return { error: `\u5E73\u53F0\u5217\u5E93\u5931\u8D25\uFF1A${platformList.error}` };
+    }
+    name = platformList.find((row) => hostOf(row?.hostname) === host)?.name;
+  }
+  if (!name) {
+    return {
+      error: "\u9762\u677F\u5E93\u672A\u5728\u5E73\u53F0\u767B\u8BB0\uFF08\u672C\u5730\u767B\u8BB0\u8868\u4E0E\u5E73\u53F0\u5E93\u5217\u8868\u5747\u65E0\u5339\u914D hostname\uFF09\uFF0C\u65E0\u5E73\u53F0\u7528\u91CF"
+    };
+  }
+  const cacheKey = `${host}:${name}`;
+  if (usageCache2.data && usageCache2.key === cacheKey && Date.now() - usageCache2.at < USAGE_CACHE_TTL) {
+    return usageCache2.data;
+  }
+  const [month, ...windowEntries] = await Promise.all([
+    getDatabaseUsage(env2, name),
+    ...USAGE_WINDOWS.map(
+      ([label, days]) => getDatabaseUsage(env2, name, {
+        from: new Date(Date.now() - days * 86400 * 1e3).toISOString()
+      }).then((usage3) => [label, usage3])
+    )
+  ]);
+  const result = {
+    database: name,
+    storageBytes: month.storageBytes,
+    bytesSynced: month.bytesSynced,
+    windows: Object.fromEntries(windowEntries)
+  };
+  usageCache2 = { key: cacheKey, at: Date.now(), data: result };
+  return result;
+}
+__name(panelPlatformUsage, "panelPlatformUsage");
+
 // api/_turso/panel-usage.js
-async function panelUsage(db) {
+async function panelUsage(db, env2 = {}) {
   const since = Math.floor(
     Date.UTC((/* @__PURE__ */ new Date()).getUTCFullYear(), (/* @__PURE__ */ new Date()).getUTCMonth(), (/* @__PURE__ */ new Date()).getUTCDate()) / 1e3
   );
@@ -15344,6 +16339,9 @@ async function panelUsage(db) {
       { sql: `SELECT COUNT(*) AS v FROM ${DEVICES_TABLE}` }
     ]);
     const scalar = /* @__PURE__ */ __name((statement) => Number(statement?.rows?.[0]?.v) || 0, "scalar");
+    const platformUsage = await panelPlatformUsage(db, env2).catch((error3) => ({
+      error: `\u5E73\u53F0\u7528\u91CF\u8BFB\u53D6\u5931\u8D25\uFF1A${error3?.message ?? "\u672A\u77E5\u9519\u8BEF"}`
+    }));
     return jsonResponse(
       {
         success: true,
@@ -15354,7 +16352,8 @@ async function panelUsage(db) {
           aiVerdicts24h: scalar(ai24h),
           users: scalar(users),
           devices: scalar(devices),
-          windowHours: 24
+          windowHours: 24,
+          platformUsage
         }
       },
       { headers: NO_CACHE }
@@ -15562,7 +16561,7 @@ async function guard3(context2, db) {
   });
 }
 __name(guard3, "guard");
-async function onRequest17(context2) {
+async function onRequest18(context2) {
   const url = new URL(context2.request.url);
   const path = url.pathname.replace(/\/+$/, "") || "/api/turso";
   const method = context2.request.method;
@@ -15581,7 +16580,7 @@ async function onRequest17(context2) {
         auth: "admin"
       });
       if (!adminGate.ok) return adminGate.response;
-      return panelUsage(db);
+      return panelUsage(db, context2.env);
     }
     const gate = await guard3(context2, db);
     if (!gate.ok) return gate.response;
@@ -15607,7 +16606,7 @@ async function onRequest17(context2) {
     return errorResponse(TAG16, method, path, error3);
   }
 }
-__name(onRequest17, "onRequest");
+__name(onRequest18, "onRequest");
 async function listAll(context2, db) {
   const [platform2, saved] = await Promise.all([
     listDatabases(context2.env).catch((error3) => ({ error: error3.message })),
@@ -15693,7 +16692,7 @@ async function remove2(context2, db, name) {
 __name(remove2, "remove");
 
 // api/users.js
-async function onRequest18(context2) {
+async function onRequest19(context2) {
   const { adapter: db, response } = await resolveAdapter(context2.env);
   if (response) return response;
   await db.ready;
@@ -15705,7 +16704,7 @@ async function onRequest18(context2) {
     context2.request.method
   );
 }
-__name(onRequest18, "onRequest");
+__name(onRequest19, "onRequest");
 
 // api/config.js
 var TAG17 = "api/config";
@@ -15733,7 +16732,7 @@ async function putConfig(context2, db) {
   return jsonResponse({ success: true, data }, { headers: NO_CACHE });
 }
 __name(putConfig, "putConfig");
-async function onRequest19(context2) {
+async function onRequest20(context2) {
   const { adapter: db, response } = await resolveAdapter(context2.env);
   if (response) return response;
   await db.ready;
@@ -15751,9 +16750,9 @@ async function onRequest19(context2) {
     return errorResponse(TAG17, method, path, error3);
   }
 }
-__name(onRequest19, "onRequest");
+__name(onRequest20, "onRequest");
 
-// ../.wrangler/tmp/pages-YhGh6h/functionsRoutes-0.8007019083717732.mjs
+// ../.wrangler/tmp/pages-kySL7J/functionsRoutes-0.13266090994786295.mjs
 var routes = [
   {
     routePath: "/api/_health/run",
@@ -15840,53 +16839,60 @@ var routes = [
     modules: [onRequest11]
   },
   {
+    routePath: "/api/rollouts/:rest*",
+    mountPath: "/api/rollouts",
+    method: "",
+    middlewares: [],
+    modules: [onRequest12]
+  },
+  {
     routePath: "/api/rules/:rest*",
     mountPath: "/api/rules",
     method: "",
     middlewares: [],
-    modules: [onRequest12]
+    modules: [onRequest13]
   },
   {
     routePath: "/api/schema/:rest*",
     mountPath: "/api/schema",
     method: "",
     middlewares: [],
-    modules: [onRequest13]
+    modules: [onRequest14]
   },
   {
     routePath: "/api/setup/:rest*",
     mountPath: "/api/setup",
     method: "",
     middlewares: [],
-    modules: [onRequest14]
+    modules: [onRequest15]
   },
   {
     routePath: "/api/subscribe/:rest*",
     mountPath: "/api/subscribe",
     method: "",
     middlewares: [],
-    modules: [onRequest15]
+    modules: [onRequest16]
   },
   {
     routePath: "/api/trigger/:rest*",
     mountPath: "/api/trigger",
     method: "",
     middlewares: [],
-    modules: [onRequest16]
+    modules: [onRequest17]
   },
   {
     routePath: "/api/turso/:rest*",
     mountPath: "/api/turso",
     method: "",
     middlewares: [],
-    modules: [onRequest17]
+    modules: [onRequest18]
   },
   {
     routePath: "/api/users/:rest*",
     mountPath: "/api/users",
     method: "",
     middlewares: [],
-    modules: [onRequest18]
+    modules: [onRequest19]
   },
   {
     routePath: "/api/ai",
@@ -15907,7 +16913,7 @@ var routes = [
     mountPath: "/api",
     method: "",
     middlewares: [],
-    modules: [onRequest19]
+    modules: [onRequest20]
   },
   {
     routePath: "/api/devices",
@@ -15973,53 +16979,60 @@ var routes = [
     modules: [onRequest11]
   },
   {
-    routePath: "/api/rules",
+    routePath: "/api/rollouts",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest12]
   },
   {
-    routePath: "/api/schema",
+    routePath: "/api/rules",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest13]
   },
   {
-    routePath: "/api/setup",
+    routePath: "/api/schema",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest14]
   },
   {
-    routePath: "/api/subscribe",
+    routePath: "/api/setup",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest15]
   },
   {
-    routePath: "/api/trigger",
+    routePath: "/api/subscribe",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest16]
   },
   {
-    routePath: "/api/turso",
+    routePath: "/api/trigger",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest17]
   },
   {
-    routePath: "/api/users",
+    routePath: "/api/turso",
     mountPath: "/api",
     method: "",
     middlewares: [],
     modules: [onRequest18]
+  },
+  {
+    routePath: "/api/users",
+    mountPath: "/api",
+    method: "",
+    middlewares: [],
+    modules: [onRequest19]
   }
 ];
 
